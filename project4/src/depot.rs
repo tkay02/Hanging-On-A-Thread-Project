@@ -46,4 +46,15 @@ impl Depot {
         kleh
     }
 
+    pub fn test_status(&self) -> String {
+        let mut result1 = "false";
+        if self.burnstone != String::new() { result1 = "true"; }
+        let mut result2 = "false";
+        if self.seaplum != String::new() { result2 = "true"; }
+        let mut result3 = "false";
+        if self.kleh != String::new() { result3 = "true"; }
+        String::new().to_owned() + "Burnstone obtained: " + result1 +
+        "\nSeaplum obtained: " + result2 + "\nKleh obtained: " + result3
+    }
+
 }
