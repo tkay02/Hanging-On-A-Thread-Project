@@ -13,6 +13,7 @@ pub struct Steward {
     burnstone_cond: Condvar,
     seaplum_cond: Condvar,
     kleh_cond: Condvar,
+    wait_cond: Condvar,
     resource1: String,
     resource2: String
 }
@@ -24,6 +25,7 @@ impl Steward {
             burnstone_cond: Condvar::new(),
             seaplum_cond: Condvar::new(),
             kleh_cond: Condvar::new(),
+            wait_cond: Condvar::new(),
             resource1: String::new(),
             resource2: String::new()
         }
@@ -78,8 +80,18 @@ impl Steward {
         self.place_resources();
     }
 
+    //Needs reworking
     pub fn wait(&self) {
+        let lock = &*self.depot;
+        let guard = lock.lock().unwrap();
+        let _guard = self.wait_cond.wait_while(guard, |depot| {!depot.is_empty()});
+    }
 
+    pub fn go(&mut self) {
+        loop {
+            self.produce();
+            self.wait();
+        }
     }
 
 }

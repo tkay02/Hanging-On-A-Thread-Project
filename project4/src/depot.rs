@@ -57,4 +57,9 @@ impl Depot {
         "\nSeaplum obtained: " + result2 + "\nKleh obtained: " + result3
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.burnstone == String::new() && self.seaplum == String::new() &&
+        self.kleh == String::new()
+    }
+
 }

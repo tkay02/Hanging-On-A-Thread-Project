@@ -20,7 +20,25 @@ impl DragonRider {
         }
     }
 
+    pub fn consume(&mut self) {
+        let lock = &*self.depot;
+        let mut depot = lock.lock().unwrap();
+        match self.main_resource.as_str() {
+            "Burnstone" => {
+                let _ = &depot.take_burnstone();
+            },
+            "Seaplum" => {
+                let _ = &depot.take_seaplum();
+            },
+            _ => {
+                let _ = &depot.take_kleh();
+            }
+        }
+    }
+
     
+
+
 
 
 
