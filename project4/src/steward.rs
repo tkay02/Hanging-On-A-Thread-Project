@@ -59,7 +59,7 @@ impl Steward {
 
     fn notify_resource(&mut self, resource:String, depot:&Depot) {
         match resource.as_str() {
-            "Firestone" => {
+            "Burnstone" => {
                 depot.place_burnstone();
                 let (lock2, condvar) = &*self.firestone_ready;
                 let mut ready = lock2.lock().unwrap();
@@ -86,10 +86,11 @@ impl Steward {
 
     fn wait_for_received(&self) {
         let (lock, condvar) = &*self.stronghold_received;
-        let _guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
+        let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
             println!("Waiting for received condition");
-            *condition
-        } );
+            !*condition
+        }).unwrap();
+        *guard = false;
     }
 
     pub fn go(&mut self) {

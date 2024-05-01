@@ -3,43 +3,66 @@ use std::sync::{Arc, Condvar, Mutex};
 use crate::depot::Depot;
 
 
-
 pub struct DragonRider {
-    main_resource: String,
+    resource_type: String,
     depot: Arc<Mutex<Depot>>,
-    alert: Condvar
+    depot_signal: Arc<(Mutex<bool>, Condvar)>,
+    deliever_signal: Arc<(Mutex<bool>, Condvar)>
 }
 
 impl DragonRider {
 
-    pub fn new(resource:String, depot:Arc<Mutex<Depot>>) -> DragonRider {
+    pub fn new(resource:String, 
+               depot:Arc<Mutex<Depot>>, 
+               depot_signal:Arc<(Mutex<bool>, Condvar)>,
+               deliever_signal:Arc<(Mutex<bool>, Condvar)>) -> DragonRider {
         DragonRider {
-            main_resource: resource,
+            resource_type: resource,
             depot: depot,
-            alert: Condvar::new()
+            depot_signal: depot_signal,
+            deliever_signal: deliever_signal
         }
     }
 
-    pub fn consume(&mut self) {
+    fn consume(&self) {
         let lock = &*self.depot;
         let mut depot = lock.lock().unwrap();
-        match self.main_resource.as_str() {
+        match self.resource_type.as_str() {
             "Burnstone" => {
-                let _ = &depot.take_burnstone();
+                &depot.take_burnstone();
             },
             "Seaplum" => {
-                let _ = &depot.take_seaplum();
+                &depot.take_seaplum();
             },
-            _ => {
-                let _ = &depot.take_kleh();
+            "Klah" => {
+                &depot.take_kleh();
             }
+            _ => { unreachable!() }
         }
     }
 
-    
+    fn wait_for_consumation(&self) {
+        let (lock, condvar) = &*self.depot_signal;
+        let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
+            println!("Waiting for received condition");
+            !*condition
+        }).unwrap();
+        *guard = false;
+    }
 
+    fn wait_for_delievery(&self) {
+        let (lock, condvar) = &*self.deliever_signal;
+        let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
+            println!("Waiting for delievery condition");
+            !*condition
+        }).unwrap();
+        *guard = false;
+    }
 
-
-
+    pub fn go(&self) {
+        self.wait_for_consumation();
+        self.consume();
+        self.wait_for_delievery();
+    }
 
 }
