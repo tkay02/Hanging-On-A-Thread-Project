@@ -1,4 +1,4 @@
-use std::{sync::Condvar, thread, time::Duration};
+use std::{sync::{Arc, Condvar, Mutex}, thread, time::Duration};
 
 use rand::{thread_rng, Rng};
 
@@ -6,16 +6,19 @@ const MIN_SECONDS:f64 = 5.0;
 
 //Need a reference to a mutex
 pub struct Stronghold {
-    main_resource: String,
-    signal: Condvar
+    // The name of the stronghold (which contains the resource)
+    name: String,
+    // Signal to tell steward that supplies have been successfully received
+    resources_received: Arc<(Mutex<bool>, Condvar)>
 }
 
 impl Stronghold {
 
-    pub fn new(resource:String) -> Stronghold {
+    pub fn new(resource:String,
+               resources_received:Arc<(Mutex<bool>, Condvar)>) -> Stronghold {
         Stronghold {
-            main_resource: resource,
-            signal: Condvar::new()
+            name: resource,
+            resources_received: resources_received
         }
     }
 
@@ -35,12 +38,6 @@ impl Stronghold {
         println!("Stronghold {} is now consuming resources", self.main_resource);
         thread::sleep(time);
         println!("Stronghold {} has finished consuming resources", self.main_resource);
-    }
-
-    pub fn obtain_resources(&self) {
-        self.signal.notify_one();
-        self.distribute_resources();
-        self.consume_resources();
     }
 
 }

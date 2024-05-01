@@ -9,89 +9,93 @@ pub const RESOURCES:[&'static str; 3] = ["Burnstone", "Seaplum", "Klah"];
 
 /// Input fields for steward
 pub struct Steward {
+    // Reference to shared memory of depot
     depot: Arc<Mutex<Depot>>,
-    burnstone_cond: Condvar,
-    seaplum_cond: Condvar,
-    kleh_cond: Condvar,
-    wait_cond: Condvar,
-    resource1: String,
-    resource2: String
+    // Signal to receive from a stronghold
+    stronghold_received: Arc<(Mutex<bool>, Condvar)>,
+    // Signal to send that firestone is ready to be delivered
+    firestone_ready: Arc<(Mutex<bool>, Condvar)>,
+    // Signal to send that seaplum is ready to be delivered
+    seaplum_ready: Arc<(Mutex<bool>, Condvar)>,
+    // Signal to send that klah is ready to be delivered
+    klah_ready: Arc<(Mutex<bool>, Condvar)>
 }
 
 impl Steward {
-    pub fn new(depot:Arc<Mutex<Depot>>) -> Steward {
+
+    pub fn new(depot:Arc<Mutex<Depot>>, 
+               stronghold:Arc<(Mutex<bool>, Condvar)>,
+               firestone:Arc<(Mutex<bool>, Condvar)>, 
+               seaplum:Arc<(Mutex<bool>, Condvar)>,
+               klah:Arc<(Mutex<bool>, Condvar)>) -> Steward {
         Steward {
             depot: depot,
-            burnstone_cond: Condvar::new(),
-            seaplum_cond: Condvar::new(),
-            kleh_cond: Condvar::new(),
-            wait_cond: Condvar::new(),
-            resource1: String::new(),
-            resource2: String::new()
+            stronghold_received: stronghold,
+            firestone_ready: firestone,
+            seaplum_ready: seaplum,
+            klah_ready: klah
         }
     }
 
-    fn collect_resources(&mut self) {
+    fn collect_resources() -> (String, String) {
         let mut rng = thread_rng();
         let rng1 = (rng.gen::<f64>() * MAX_RESOURCES) as usize;
         let mut rng2 = (rng.gen::<f64>() * MAX_RESOURCES) as usize;
         while rng1 == rng2 {
             rng2 = (rng.gen::<f64>() * MAX_RESOURCES) as usize;
         }
-        self.resource1 = String::from(RESOURCES[rng1]);
-        self.resource2 = String::from(RESOURCES[rng2]);
-    }
-
-    fn place_resources(&self) {
-        let lock = &*self.depot;
-        let mut depot = lock.lock().unwrap();
-        match self.resource1.as_str() {
-            "Burnstone" => {
-                depot.place_burnstone();
-                self.burnstone_cond.notify_one();
-            },
-            "Seaplum" => {
-                depot.place_seaplum();
-                self.seaplum_cond.notify_one();
-            }
-            _ => {
-                depot.place_kleh();
-                self.kleh_cond.notify_one();
-            }
-        }
-        match self.resource2.as_str() {
-            "Burnstone" => {
-                depot.place_burnstone();
-                self.burnstone_cond.notify_one();
-            },
-            "Seaplum" => {
-                depot.place_seaplum();
-                self.seaplum_cond.notify_one();
-            }
-            _ => {
-                depot.place_kleh();
-                self.kleh_cond.notify_one();
-            }
-        }
+        let resource1 = String::from(RESOURCES[rng1]);
+        let resource2 = String::from(RESOURCES[rng2]);
+        (resource1, resource2)
     }
 
     pub fn produce(&mut self) {
-        self.collect_resources();
-        self.place_resources();
+        let (resource1, resource2) = Steward::collect_resources();
+        let lock = &*self.depot;
+        let mut depot = lock.lock().unwrap();
+        self.notify_resource(resource1, &depot);
+        self.notify_resource(resource2, &depot);
     }
 
-    //Needs reworking
-    pub fn wait(&self) {
-        let lock = &*self.depot;
-        let guard = lock.lock().unwrap();
-        let _guard = self.wait_cond.wait_while(guard, |depot| {!depot.is_empty()});
+    fn notify_resource(&mut self, resource:String, depot:&Depot) {
+        match resource.as_str() {
+            "Firestone" => {
+                depot.place_burnstone();
+                let (lock2, condvar) = &*self.firestone_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            },
+            "Seaplum" => {
+                depot.place_seaplum();
+                let (lock2, condvar) = &*self.seaplum_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            }
+            "Klah" => {
+                depot.place_kleh();
+                let (lock2, condvar) = &*self.klah_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            },
+            _ => { unreachable!() }
+        }
+    }
+
+    fn wait_for_received(&self) {
+        let (lock, condvar) = &*self.stronghold_received;
+        let _guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
+            println!("Waiting for received condition");
+            *condition
+        } );
     }
 
     pub fn go(&mut self) {
-        loop {
-            self.produce();
-            self.wait();
-        }
+        self.produce();
+        self.wait_for_received();
     }
+
 
 }
