@@ -24,24 +24,24 @@ impl DragonRider {
         }
     }
 
-    fn consume(&self) {
+    pub fn consume(&self) {
         let lock = &*self.depot;
         let mut depot = lock.lock().unwrap();
         match self.resource_type.as_str() {
             "Burnstone" => {
-                &depot.take_burnstone();
+                let _ = &depot.take_burnstone();
             },
             "Seaplum" => {
-                &depot.take_seaplum();
+                let _ = &depot.take_seaplum();
             },
             "Klah" => {
-                &depot.take_kleh();
+                let _ = &depot.take_kleh();
             }
             _ => { unreachable!() }
         }
     }
 
-    fn wait_for_consumation(&self) {
+    pub fn wait_for_consumation(&self) {
         let (lock, condvar) = &*self.depot_signal;
         let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
             println!("Waiting for received condition");

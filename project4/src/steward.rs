@@ -53,12 +53,31 @@ impl Steward {
         let (resource1, resource2) = Steward::collect_resources();
         let lock = &*self.depot;
         let mut depot = lock.lock().unwrap();
-        self.notify_resource(resource1, &depot);
-        self.notify_resource(resource2, &depot);
-    }
-
-    fn notify_resource(&mut self, resource:String, depot:&Depot) {
-        match resource.as_str() {
+        match resource1.as_str() {
+            "Burnstone" => {
+                depot.place_burnstone();
+                let (lock2, condvar) = &*self.firestone_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            },
+            "Seaplum" => {
+                depot.place_seaplum();
+                let (lock2, condvar) = &*self.seaplum_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            }
+            "Klah" => {
+                depot.place_kleh();
+                let (lock2, condvar) = &*self.klah_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            },
+            _ => { unreachable!() }
+        }
+        match resource2.as_str() {
             "Burnstone" => {
                 depot.place_burnstone();
                 let (lock2, condvar) = &*self.firestone_ready;
@@ -83,6 +102,8 @@ impl Steward {
             _ => { unreachable!() }
         }
     }
+
+    
 
     fn wait_for_received(&self) {
         let (lock, condvar) = &*self.stronghold_received;
