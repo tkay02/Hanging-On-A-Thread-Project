@@ -9,17 +9,29 @@ pub struct Stronghold {
     // The name of the stronghold (which contains the resource)
     name: String,
     // Signal to tell steward that supplies have been successfully received
-    resources_received: Arc<(Mutex<bool>, Condvar)>
+    resources_received: Arc<(Mutex<bool>, Condvar)>,
+    // Signal to receive that the resources that the stronghold is lacking is available
+    resources_available: Arc<(Mutex<bool>, Condvar)>,
+    // Signal to tell dragon riders to deliever needed resources
+    resources_deliever: Arc<(Mutex<bool>, Condvar)>
 }
 
 impl Stronghold {
 
-    pub fn new(resource:String,
-               resources_received:Arc<(Mutex<bool>, Condvar)>) -> Stronghold {
+    pub fn new(name: String,
+               resources_received: Arc<(Mutex<bool>, Condvar)>,
+               resources_available: Arc<(Mutex<bool>, Condvar)>,
+               resources_deliever: Arc<(Mutex<bool>, Condvar)>) -> Stronghold {
         Stronghold {
-            name: resource,
-            resources_received: resources_received
+            name: name,
+            resources_received: resources_received,
+            resources_available: resources_available,
+            resources_deliever: resources_deliever
         }
+    }
+
+    fn wait_for_resources(&self) {
+        
     }
 
     fn distribute_resources(&self) {

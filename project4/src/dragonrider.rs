@@ -1,24 +1,32 @@
 use std::sync::{Arc, Condvar, Mutex};
 
-use crate::depot::Depot;
+use crate::{depot::Depot, dragondepot::DragonDepot};
 
 
 pub struct DragonRider {
+    // Type of resource that the dragonrider is carrying
     resource_type: String,
+    // Reference to depot to obtain resources
     depot: Arc<Mutex<Depot>>,
+    // Reference to depot to store resources obtained by the dragonriders
+    dragon_depot: Arc<Mutex<DragonDepot>>,
+    // Signal that depot has resource that is ready to be collected
     depot_signal: Arc<(Mutex<bool>, Condvar)>,
+    // Signal to deliever resource to a stronghold
     deliever_signal: Arc<(Mutex<bool>, Condvar)>
 }
 
 impl DragonRider {
 
     pub fn new(resource:String, 
-               depot:Arc<Mutex<Depot>>, 
+               depot:Arc<Mutex<Depot>>,
+               dragon_depot:Arc<Mutex<DragonDepot>>,
                depot_signal:Arc<(Mutex<bool>, Condvar)>,
                deliever_signal:Arc<(Mutex<bool>, Condvar)>) -> DragonRider {
         DragonRider {
             resource_type: resource,
             depot: depot,
+            dragon_depot: dragon_depot,
             depot_signal: depot_signal,
             deliever_signal: deliever_signal
         }
@@ -59,9 +67,16 @@ impl DragonRider {
         *guard = false;
     }
 
-    pub fn go(&self) {
+    pub fn group_resources(&mut self) {
+        let lock = &*self.dragon_depot;
+        let mut dragon_depot = lock.lock().unwrap();
+        dragon_depot.place_resource(self.resource_type.clone());
+    }
+
+    pub fn go(&mut self) {
         self.wait_for_consumation();
         self.consume();
+        self.group_resources();
         self.wait_for_delievery();
     }
 

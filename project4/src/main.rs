@@ -2,6 +2,7 @@ pub mod steward;
 pub mod dragonrider;
 pub mod stronghold;
 mod depot;
+pub mod dragondepot;
 
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
@@ -11,6 +12,8 @@ use depot::Depot;
 use steward::Steward;
 
 use dragonrider::DragonRider;
+
+use crate::dragondepot::DragonDepot;
 
 fn main() {
     //Testing stuff
@@ -22,6 +25,11 @@ fn main() {
     let burnstone_deliever_signal = Arc::new((Mutex::new(false), Condvar::new()));
     let seaplum_deliever_signal = Arc::new((Mutex::new(false), Condvar::new()));
     let klah_deliever_signal = Arc::new((Mutex::new(false), Condvar::new()));
+
+    let dragon_depot = Arc::new(Mutex::new(DragonDepot::new(
+        Arc::clone(&burnstone_deliever_signal), Arc::clone(&seaplum_deliever_signal),
+         Arc::clone(&klah_deliever_signal))));
+
 
     let mut steward = Steward::new(
         Arc::clone(&depot),
@@ -37,7 +45,8 @@ fn main() {
 
     let mut dragonrider1:DragonRider = DragonRider::new(
         burnstone, 
-        Arc::clone(&depot), 
+        Arc::clone(&depot),
+        Arc::clone(&dragon_depot),
         Arc::clone(&burnstone_get_signal), 
         Arc::clone(&burnstone_deliever_signal)
     );
@@ -45,6 +54,7 @@ fn main() {
     let mut dragonrider2:DragonRider = DragonRider::new(
         seaplum, 
         Arc::clone(&depot), 
+        Arc::clone(&dragon_depot),
         Arc::clone(&seaplum_get_signal), 
         Arc::clone(&seaplum_deliever_signal)
     );
@@ -52,6 +62,7 @@ fn main() {
     let mut dragonrider3:DragonRider = DragonRider::new(
         klah, 
         Arc::clone(&depot), 
+        Arc::clone(&dragon_depot),
         Arc::clone(&klah_get_signal), 
         Arc::clone(&klah_deliever_signal)
     );
@@ -64,22 +75,25 @@ fn main() {
     let _handler2 = thread::spawn(move || {
         dragonrider1.wait_for_consumation();
         dragonrider1.consume();
+        dragonrider1.group_resources();
     });
 
     let _handler3 = thread::spawn(move || {
         dragonrider2.wait_for_consumation();
         dragonrider2.consume();
+        dragonrider2.group_resources();
     });
 
     let _handler4 = thread::spawn(move || {
         dragonrider3.wait_for_consumation();
         dragonrider3.consume();
+        dragonrider3.group_resources();
     });
 
     
     thread::sleep(Duration::from_secs(5));
-    let lock = &*depot;
+    let lock = &*dragon_depot;
     let storage = lock.lock().unwrap();
-    println!("{}", storage.test_status());
+    println!("Resource1: {} \nResource2: {}", storage.collected_item1, storage.collected_item2);
     
 }
