@@ -1,3 +1,19 @@
+//! # Hanging on by a Thread: depot.rs
+//! # Version: May 3rd 2024
+//!
+//! ## Description
+//!
+//!
+//! ## Dependencies
+//!
+//!
+//! ## Authors
+//! - Dylan Miller
+//! - Thomas Kay
+//!
+//! ## Instructor
+//! - Dr. William Kreahling
+
 use crate::steward::RESOURCES;
 
 pub struct Depot {

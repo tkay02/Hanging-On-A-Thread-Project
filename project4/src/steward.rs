@@ -1,3 +1,19 @@
+//! # Hanging on by a Thread: steward.rs
+//! # Version: May 3rd 2024
+//!
+//! ## Description
+//!
+//!
+//! ## Dependencies
+//!
+//!
+//! ## Authors
+//! - Dylan Miller
+//! - Thomas Kay
+//!
+//! ## Instructor
+//! - Dr. William Kreahling
+
 use std::sync::{Arc, Condvar, Mutex};
 use rand::{thread_rng, Rng};
 
