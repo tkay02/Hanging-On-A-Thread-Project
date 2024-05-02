@@ -41,27 +41,27 @@ impl DragonDepot {
             self.collected_item2 = resource;
         }
         self.item_count += 1;
-        // if self.item_count == MAX_ITEM {
-        //     if !self.has_burnstone() {
-        //         let (lock, condvar) = &*self.burnstone_signal;
-        //         let mut ready = lock.lock().unwrap();
-        //         *ready = true;
-        //         condvar.notify_one();
-        //     } else if !self.has_seaplum() {
-        //         let (lock, condvar) = &*self.seaplum_signal;
-        //         let mut ready = lock.lock().unwrap();
-        //         *ready = true;
-        //         condvar.notify_one();
-        //     } else if !self.has_klah() {
-        //         let (lock, condvar) = &*self.klah_signal;
-        //         let mut ready = lock.lock().unwrap();
-        //         *ready = true;
-        //         condvar.notify_one();
-        //     } else {
-        //         unreachable!()
-        //     }
-        //     self.deplete();
-        // }
+        if self.item_count == MAX_ITEM {
+            if !self.has_burnstone() {
+                let (lock, condvar) = &*self.burnstone_signal;
+                let mut ready = lock.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            } else if !self.has_seaplum() {
+                let (lock, condvar) = &*self.seaplum_signal;
+                let mut ready = lock.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            } else if !self.has_klah() {
+                let (lock, condvar) = &*self.klah_signal;
+                let mut ready = lock.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            } else {
+                unreachable!()
+            }
+            self.deplete();
+        }
     }
 
     fn has_klah(&self) -> bool {

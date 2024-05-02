@@ -3,6 +3,7 @@ pub mod dragonrider;
 pub mod stronghold;
 mod depot;
 pub mod dragondepot;
+mod stronghold_supply;
 
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
