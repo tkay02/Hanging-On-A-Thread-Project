@@ -1,3 +1,20 @@
+//! # Hanging on by a Thread: main.rs
+//! # Version: May 3rd 2024
+//!
+//! ## Description
+//!
+//!
+//! ## Dependencies
+//!
+//!
+//! ## Authors
+//! - Dylan Miller
+//! - Thomas Kay
+//!
+//! ## Instructor
+//! - Dr. William Kreahling
+
+
 pub mod steward;
 pub mod dragonrider;
 pub mod stronghold;
@@ -17,6 +34,7 @@ use dragonrider::DragonRider;
 use crate::dragondepot::DragonDepot;
 
 fn main() {
+
     //Testing stuff
     let depot = Arc::new(Mutex::new(Depot::new()));
     let burnstone_get_signal = Arc::new((Mutex::new(false), Condvar::new()));
@@ -45,29 +63,29 @@ fn main() {
     let klah = String::from("Klah");
 
     let mut dragonrider1:DragonRider = DragonRider::new(
-        burnstone, 
+        burnstone,
         Arc::clone(&depot),
         Arc::clone(&dragon_depot),
-        Arc::clone(&burnstone_get_signal), 
+        Arc::clone(&burnstone_get_signal),
         Arc::clone(&burnstone_deliever_signal)
     );
 
     let mut dragonrider2:DragonRider = DragonRider::new(
-        seaplum, 
-        Arc::clone(&depot), 
+        seaplum,
+        Arc::clone(&depot),
         Arc::clone(&dragon_depot),
-        Arc::clone(&seaplum_get_signal), 
+        Arc::clone(&seaplum_get_signal),
         Arc::clone(&seaplum_deliever_signal)
     );
 
     let mut dragonrider3:DragonRider = DragonRider::new(
-        klah, 
-        Arc::clone(&depot), 
+        klah,
+        Arc::clone(&depot),
         Arc::clone(&dragon_depot),
-        Arc::clone(&klah_get_signal), 
+        Arc::clone(&klah_get_signal),
         Arc::clone(&klah_deliever_signal)
     );
-    
+
 
     let _handler1 = thread::spawn(move || {
         steward.produce();
@@ -91,10 +109,10 @@ fn main() {
         dragonrider3.group_resources();
     });
 
-    
+
     thread::sleep(Duration::from_secs(5));
     let lock = &*dragon_depot;
     let storage = lock.lock().unwrap();
     println!("Resource1: {} \nResource2: {}", storage.collected_item1, storage.collected_item2);
-    
+
 }

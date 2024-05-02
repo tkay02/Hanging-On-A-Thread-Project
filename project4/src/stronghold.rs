@@ -1,3 +1,19 @@
+//! # Hanging on by a Thread: stronghold.rs
+//! # Version: May 3rd 2024
+//!
+//! ## Description
+//!
+//!
+//! ## Dependencies
+//!
+//!
+//! ## Authors
+//! - Dylan Miller
+//! - Thomas Kay
+//!
+//! ## Instructor
+//! - Dr. William Kreahling
+
 use std::{sync::{Arc, Condvar, Mutex}, thread, time::Duration};
 
 use rand::{thread_rng, Rng};
