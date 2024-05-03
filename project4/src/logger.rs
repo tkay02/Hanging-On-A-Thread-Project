@@ -24,7 +24,7 @@
 //! - Dr. William Kreahling
 
 use std::io::{BufWriter,Write,Error};
-use std::fs::{File, OpenOptions};
+use std::fs::{File,OpenOptions};
 use std::process;
 
 /// Represents a simple logger with the capability to write messages to a file
@@ -34,8 +34,7 @@ use std::process;
 /// - `file_writer`: An optional `BufWriter<File>` used for writing messages to a file
 ///   when enabled. If `None`, messages will be printed to standard output.
 pub struct Logger {
-    is_writable: bool,
-    file_writer: BufWriter<File>
+    file_writer: Option<BufWriter<File>>
 }
 
 impl Logger {
