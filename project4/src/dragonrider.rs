@@ -55,15 +55,15 @@ impl DragonRider {
         }
     }
 
-    pub fn waiting_for_resource(&self) -> String {
+    fn waiting_for_resource(&self) -> String {
         self.resource_type.clone() + " dragon rider is waiting for resource"
     }
 
-    pub fn obtained_resource(&self) -> String {
+    fn obtained_resource(&self) -> String {
         self.resource_type.clone() + " dragon rider has obtained resource"
     }
 
-    pub fn consume(&self) {
+    fn consume(&self) {
         let lock = &*self.depot;
         let mut depot = lock.lock().unwrap();
         match self.resource_type.as_str() {
@@ -87,7 +87,7 @@ impl DragonRider {
         writer.write(message);
     }
 
-    pub fn wait_for_consumation(&self) {
+    fn wait_for_consumation(&self) {
         let (lock, condvar) = &*self.depot_signal;
         let guard = lock.lock().unwrap();
         self.write_status(self.waiting_for_resource());
@@ -97,16 +97,18 @@ impl DragonRider {
         *guard = false;
     }
 
-    pub fn group_resources(&mut self) {
+    fn group_resources(&mut self) {
         let lock = &*self.dragon_depot;
         let mut dragon_depot = lock.lock().unwrap();
         dragon_depot.place_resource(self.resource_type.clone());
     }
 
     pub fn go(&mut self) {
-        self.wait_for_consumation();
-        self.consume();
-        self.group_resources();
+        loop {
+            self.wait_for_consumation();
+            self.consume();
+            self.group_resources();
+        }
     }
 
 }

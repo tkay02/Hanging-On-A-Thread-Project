@@ -145,59 +145,29 @@ fn main() {
 
     //Steward thread
     thread::spawn(move || {
-        loop {
-            steward.produce();
-            steward.wait_for_received();
-        }
+        steward.go();
     });
 
     //Stronghold threads
     thread::spawn(move || {
-        loop {
-            burnstone_stronghold.wait_for_resources();
-            burnstone_stronghold.resources_received();
-            burnstone_stronghold.distribute_resources();
-            burnstone_stronghold.consume_resources();
-        }
+        burnstone_stronghold.go();
     });
     thread::spawn(move || {
-        loop {
-            seaplum_stronghold.wait_for_resources();
-            seaplum_stronghold.resources_received();
-            seaplum_stronghold.distribute_resources();
-            seaplum_stronghold.consume_resources();
-        }
+        seaplum_stronghold.go();
     });
     thread::spawn(move || {
-        loop {
-            klah_stronghold.wait_for_resources();
-            klah_stronghold.resources_received();
-            klah_stronghold.distribute_resources();
-            klah_stronghold.consume_resources();
-        }
+        klah_stronghold.go();
     });
 
     //Dragon rider threads
     thread::spawn(move || {
-        loop {
-            burnstone_dragon_rider.wait_for_consumation();
-            burnstone_dragon_rider.consume();
-            burnstone_dragon_rider.group_resources();
-        }
+        burnstone_dragon_rider.go();
     });
     thread::spawn(move || {
-        loop {
-            seaplum_dragon_rider.wait_for_consumation();
-            seaplum_dragon_rider.consume();
-            seaplum_dragon_rider.group_resources();
-        }
+        seaplum_dragon_rider.go();
     });
     thread::spawn(move || {
-        loop {
-            klah_dragon_rider.wait_for_consumation();
-            klah_dragon_rider.consume();
-            klah_dragon_rider.group_resources();
-        }
+        klah_dragon_rider.go();
     });
 
 

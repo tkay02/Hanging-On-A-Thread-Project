@@ -82,7 +82,7 @@ impl Steward {
         self.resource2 = String::from(RESOURCES[rng2]);
     }
 
-    pub fn produce(&mut self) {
+    fn produce(&mut self) {
         self.collect_resources();
         let lock = &*self.depot;
         let mut depot = lock.lock().unwrap();
@@ -91,18 +91,18 @@ impl Steward {
         self.write_status(self.resources_delievered());
     }
 
-    pub fn resources_delievered(&self) -> String {
+    fn resources_delievered(&self) -> String {
         let mut message = "The steward has delievered resources ".to_string();
         message = message + self.resource1.clone().as_str() + " and " + 
                   self.resource2.clone().as_mut_str() + " to the depot";
         message
     }
 
-    pub fn waiting(&self) -> String {
+    fn waiting(&self) -> String {
         "The steward is waiting for stronghold to collect supplies".to_string()
     }
 
-    pub fn finished_waiting(&self) -> String {
+    fn finished_waiting(&self) -> String {
         "Steward is now ready to collect resources to give to the depot".to_string()
     }
 
@@ -142,7 +142,7 @@ impl Steward {
 
     
 
-    pub fn wait_for_received(&self) {
+    fn wait_for_received(&self) {
         let (lock, condvar) = &*self.stronghold_received;
         let guard = lock.lock().unwrap();
         self.write_status(self.waiting());
@@ -154,8 +154,10 @@ impl Steward {
     }
 
     pub fn go(&mut self) {
-        self.produce();
-        self.wait_for_received();
+        loop {
+            self.produce();
+            self.wait_for_received();
+        }
     }
 
 

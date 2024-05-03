@@ -53,7 +53,7 @@ impl Stronghold {
         }
     }
 
-    pub fn wait_for_resources(&self) {
+    fn wait_for_resources(&self) {
         let (lock, condvar) = &*self.resources_available;
         let guard = lock.lock().unwrap();
         self.write_status(self.waiting());
@@ -64,7 +64,7 @@ impl Stronghold {
         *guard = false;
     }
 
-    pub fn waiting(&self) -> String {
+    fn waiting(&self) -> String {
         let mut message = "Stronghold ".to_string() + self.name.clone().as_str();
         message = message + " waiting for its resources";
         message
@@ -76,20 +76,20 @@ impl Stronghold {
         writer.write(message);
     }
 
-    pub fn received(&self) -> String {
+    fn received(&self) -> String {
         let mut message = "Dragon riders had delievered resources to Stronghold ".to_string();
         message = message + self.name.clone().as_str();
         message
     }
     
-    pub fn resources_received(&self) {
+    fn resources_received(&self) {
         let (lock, condvar) = &*self.resources_received;
         let mut received = lock.lock().unwrap();
         *received = true;
         condvar.notify_one();
     }
     
-    pub fn distribute_resources(&self) {
+    fn distribute_resources(&self) {
         let mut rng = thread_rng();
         let time_rng = ((rng.gen::<f64>() * MIN_SECONDS) + MIN_SECONDS) as u64;
         let time = Duration::from_secs(time_rng);
@@ -115,9 +115,7 @@ impl Stronghold {
         }
     }
 
-    //Maybe make methods that returns strings?
-
-    pub fn consume_resources(&self) {
+    fn consume_resources(&self) {
         let mut rng = thread_rng();
         let time_rng = ((rng.gen::<f64>() * MIN_SECONDS) + MIN_SECONDS) as u64;
         let time = Duration::from_secs(time_rng);
@@ -126,11 +124,13 @@ impl Stronghold {
         self.write_status(self.distribute_or_consume(false, true));
     }
 
-    pub fn go(&mut self) {
-        self.wait_for_resources();
-        self.resources_received();
-        self.distribute_resources();
-        self.consume_resources();
+    pub fn go(&self) {
+        loop {
+            self.wait_for_resources();
+            self.resources_received();
+            self.distribute_resources();
+            self.consume_resources();
+        }
     }
 
 }
