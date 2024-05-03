@@ -28,18 +28,12 @@ mod depot;
 pub mod dragondepot;
 mod logger;
 
-use std::{env, process};
-use std::sync::{Arc, Condvar, Mutex};
-use std::thread;
-use std::time::Duration;
-
+use std::{env, process, sync::{Arc, Mutex, Condvar}, thread, time::Duration};
 use depot::Depot;
 use logger::Logger;
 use steward::Steward;
-
 use dragonrider::DragonRider;
 use stronghold::Stronghold;
-
 use crate::dragondepot::DragonDepot;
 
 const LOG_FILE:&str = "log.txt";
@@ -53,7 +47,6 @@ const LOG_FILE:&str = "log.txt";
 /// then running until ctrl + c is pressed
 ///
 fn main() {
-    
     let args:Vec<String> = env::args().collect();
     if args.len() != 3 {
         println!("Usage: cargo run <seconds_to_run> <T|F>");
@@ -91,7 +84,7 @@ fn main() {
     //Signal from steward that seaplum is supplied in the depot
     let seaplum_signal = Arc::new((Mutex::new(false), Condvar::new()));
     //Signal from steward that klah is supplied in the depot
-    let klah_signal = Arc::new((Mutex::new(false), Condvar::new())); 
+    let klah_signal = Arc::new((Mutex::new(false), Condvar::new()));
     //Signal from dragon rider's depot that supplies for burnstone stronghold is ready
     let burnstone_stronghold_signal = Arc::new((Mutex::new(false), Condvar::new()));
     //Signal from dragon rider's depot that supplies for seaplum stronghold is ready
@@ -113,12 +106,12 @@ fn main() {
 
     //Burnstone Stronghold
     let burnstone_stronghold = Stronghold::new(
-        "Burnstone".to_string(), Arc::clone(&steward_signal), 
+        "Burnstone".to_string(), Arc::clone(&steward_signal),
         Arc::clone(&burnstone_stronghold_signal), Arc::clone(&log_arc)
     );
     //Seaplum Stronghold
     let seaplum_stronghold = Stronghold::new(
-        "Seaplum".to_string(), Arc::clone(&steward_signal), 
+        "Seaplum".to_string(), Arc::clone(&steward_signal),
         Arc::clone(&seaplum_stronghold_signal), Arc::clone(&log_arc)
     );
     //Klah Stronghold

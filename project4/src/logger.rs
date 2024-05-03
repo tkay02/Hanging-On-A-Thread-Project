@@ -48,14 +48,17 @@ impl Logger {
     /// # Returns
     /// - A `Result<Logger, Error>` which is `Ok` containing the `Logger` if file operations succeed,
     ///   or an `Err` with an `Error` if there is a problem opening or creating the file.
-    pub fn new(file_name:String, write_to_file:bool) -> Result<Logger, Error> {
-        let output = OpenOptions::new()
-            .create(true)
-            .write(true)
-            //.truncate(true)
-            .open(file_name)?;
-        let file_writer = BufWriter::new(output);
-        Ok( Logger {is_writable: write_to_file, file_writer} )
+    pub fn new(file_name: String, write_to_file: bool) -> Result<Logger, Error> {
+        if write_to_file {
+            let output = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .truncate(true)
+                .open(file_name)?;
+            Ok(Logger { file_writer: Some(BufWriter::new(output)) })
+        } else {
+            Ok(Logger { file_writer: None })
+        }
     }
 
     /// Writes a message to the configured output destination.
@@ -69,13 +72,13 @@ impl Logger {
     ///
     /// # Panics
     /// - The function will exit the process if it fails to write to the file.
-    pub fn write(&mut self, message:String) {
-        if self.is_writable {
-            let result = self.file_writer.write(message.as_bytes());
-            if result.is_err() {
-                println!("An error has occurred when writing to a file");
+    pub fn write(&mut self, message: String) {
+        if let Some(ref mut writer) = self.file_writer {
+            if let Err(e) = writeln!(writer, "{}", message) {
+                eprintln!("Error writing to file: {}", e);
                 process::exit(1);
             }
+            writer.flush().unwrap();
         } else {
             println!("{}", message);
         }
