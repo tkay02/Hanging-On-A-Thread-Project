@@ -28,8 +28,6 @@ pub struct DragonRider {
     dragon_depot: Arc<Mutex<DragonDepot>>,
     // Signal that depot has resource that is ready to be collected
     depot_signal: Arc<(Mutex<bool>, Condvar)>,
-    // Signal to deliever resource to a stronghold
-    deliever_signal: Arc<(Mutex<bool>, Condvar)>
 }
 
 impl DragonRider {
@@ -37,15 +35,21 @@ impl DragonRider {
     pub fn new(resource:String, 
                depot:Arc<Mutex<Depot>>,
                dragon_depot:Arc<Mutex<DragonDepot>>,
-               depot_signal:Arc<(Mutex<bool>, Condvar)>,
-               deliever_signal:Arc<(Mutex<bool>, Condvar)>) -> DragonRider {
+               depot_signal:Arc<(Mutex<bool>, Condvar)>) -> DragonRider {
         DragonRider {
             resource_type: resource,
             depot: depot,
             dragon_depot: dragon_depot,
-            depot_signal: depot_signal,
-            deliever_signal: deliever_signal
+            depot_signal: depot_signal
         }
+    }
+
+    pub fn waiting_for_resource(&self) -> String {
+        self.resource_type.clone() + " dragon rider is waiting for resource"
+    }
+
+    pub fn obtained_resource(&self) -> String {
+        self.resource_type.clone() + " dragon rider has obtained resource"
     }
 
     pub fn consume(&self) {
@@ -68,16 +72,6 @@ impl DragonRider {
     pub fn wait_for_consumation(&self) {
         let (lock, condvar) = &*self.depot_signal;
         let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
-            println!("Waiting for received condition");
-            !*condition
-        }).unwrap();
-        *guard = false;
-    }
-
-    fn wait_for_delievery(&self) {
-        let (lock, condvar) = &*self.deliever_signal;
-        let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
-            println!("Waiting for delievery condition");
             !*condition
         }).unwrap();
         *guard = false;
@@ -93,7 +87,6 @@ impl DragonRider {
         self.wait_for_consumation();
         self.consume();
         self.group_resources();
-        self.wait_for_delievery();
     }
 
 }

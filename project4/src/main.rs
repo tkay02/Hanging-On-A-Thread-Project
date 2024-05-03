@@ -20,8 +20,8 @@ pub mod dragonrider;
 pub mod stronghold;
 mod depot;
 pub mod dragondepot;
-mod stronghold_supply;
 
+use std::{env, process};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -30,89 +30,173 @@ use depot::Depot;
 use steward::Steward;
 
 use dragonrider::DragonRider;
+use stronghold::Stronghold;
 
 use crate::dragondepot::DragonDepot;
 
+const LOG_FILE:&str = "log.txt";
+
 fn main() {
+    
+    let args:Vec<String> = env::args().collect();
+    if args.len() != 3 {
+        println!("Usage: cargo run <seconds_to_run> <T|F>");
+        process::exit(1);
+    }
+    let seconds_arg = &args[1];
+    let log_arg = &args[2];
+    let seconds_convert = seconds_arg.parse::<i64>();
+    if seconds_convert.is_err() {
+        println!("Invalid argument for number of seconds: must be an integer");
+        process::exit(1);
+    }
+    let seconds = seconds_convert.unwrap();
+    if log_arg.as_str() != "T" && log_arg.as_str() != "F" {
+        println!("Invalid argument for true or false condition for logging");
+        process::exit(1);
+    }
 
-    //Testing stuff
+    //Insert code for log file creation
+
+    //Depot where the steward stores resources to/the dragon riders take from
     let depot = Arc::new(Mutex::new(Depot::new()));
-    let burnstone_get_signal = Arc::new((Mutex::new(false), Condvar::new()));
-    let seaplum_get_signal = Arc::new((Mutex::new(false), Condvar::new()));
-    let klah_get_signal = Arc::new((Mutex::new(false), Condvar::new()));
-    let refill_signal = Arc::new((Mutex::new(false), Condvar::new()));
-    let burnstone_deliever_signal = Arc::new((Mutex::new(false), Condvar::new()));
-    let seaplum_deliever_signal = Arc::new((Mutex::new(false), Condvar::new()));
-    let klah_deliever_signal = Arc::new((Mutex::new(false), Condvar::new()));
 
+    //Signal for steward to collect supplies after stronghold is finished
+    let steward_signal = Arc::new((Mutex::new(false), Condvar::new()));
+    //Signal from steward that burnstone is supplied in the depot
+    let burnstone_signal = Arc::new((Mutex::new(false), Condvar::new()));
+    //Signal from steward that seaplum is supplied in the depot
+    let seaplum_signal = Arc::new((Mutex::new(false), Condvar::new()));
+    //Signal from steward that klah is supplied in the depot
+    let klah_signal = Arc::new((Mutex::new(false), Condvar::new())); 
+    //Signal from dragon rider's depot that supplies for burnstone stronghold is ready
+    let burnstone_stronghold_signal = Arc::new((Mutex::new(false), Condvar::new()));
+    //Signal from dragon rider's depot that supplies for seaplum stronghold is ready
+    let seaplum_stronghold_signal = Arc::new((Mutex::new(false), Condvar::new()));
+    //Signal from dragon rider's depot that supplies for klah stronghold is ready
+    let klah_stronghold_signal = Arc::new((Mutex::new(false), Condvar::new()));
+
+    //Mini depot that dragon riders put resources in to know which stronghold to deliever to
     let dragon_depot = Arc::new(Mutex::new(DragonDepot::new(
-        Arc::clone(&burnstone_deliever_signal), Arc::clone(&seaplum_deliever_signal),
-         Arc::clone(&klah_deliever_signal))));
+        Arc::clone(&burnstone_stronghold_signal), Arc::clone(&seaplum_stronghold_signal),
+        Arc::clone(&klah_stronghold_signal)
+    )));
 
-
+    //Steward
     let mut steward = Steward::new(
-        Arc::clone(&depot),
-        Arc::clone(&refill_signal),
-        Arc::clone(&burnstone_get_signal),
-        Arc::clone(&seaplum_get_signal),
-        Arc::clone(&klah_get_signal)
+        Arc::clone(&depot), Arc::clone(&steward_signal), Arc::clone(&burnstone_signal),
+        Arc::clone(&seaplum_signal), Arc::clone(&klah_signal)
     );
 
-    let burnstone = String::from("Burnstone");
-    let seaplum = String::from("Seaplum");
-    let klah = String::from("Klah");
-
-    let mut dragonrider1:DragonRider = DragonRider::new(
-        burnstone,
-        Arc::clone(&depot),
-        Arc::clone(&dragon_depot),
-        Arc::clone(&burnstone_get_signal),
-        Arc::clone(&burnstone_deliever_signal)
+    //Burnstone Stronghold
+    let burnstone_stronghold = Stronghold::new(
+        "Burnstone".to_string(), Arc::clone(&steward_signal), 
+        Arc::clone(&burnstone_stronghold_signal)
+    );
+    //Seaplum Stronghold
+    let seaplum_stronghold = Stronghold::new(
+        "Seaplum".to_string(), Arc::clone(&steward_signal), Arc::clone(&seaplum_stronghold_signal)
+    );
+    //Klah Stronghold
+    let klah_stronghold = Stronghold::new(
+        "Klah".to_string(), Arc::clone(&steward_signal), Arc::clone(&klah_stronghold_signal)
     );
 
-    let mut dragonrider2:DragonRider = DragonRider::new(
-        seaplum,
-        Arc::clone(&depot),
-        Arc::clone(&dragon_depot),
-        Arc::clone(&seaplum_get_signal),
-        Arc::clone(&seaplum_deliever_signal)
+    //Dragon Rider for Burnstone resource
+    let mut burnstone_dragon_rider = DragonRider::new(
+        "Burnstone".to_string(), Arc::clone(&depot), Arc::clone(&dragon_depot),
+        Arc::clone(&burnstone_signal)
+    );
+    //Dragon Rider for Seaplum resource
+    let mut seaplum_dragon_rider = DragonRider::new(
+        "Seaplum".to_string(), Arc::clone(&depot), Arc::clone(&dragon_depot),
+        Arc::clone(&seaplum_signal)
+    );
+    //Dragon Rider for Klah resource
+    let mut klah_dragon_rider = DragonRider::new(
+        "Klah".to_string(), Arc::clone(&depot), Arc::clone(&dragon_depot),
+        Arc::clone(&klah_signal)
     );
 
-    let mut dragonrider3:DragonRider = DragonRider::new(
-        klah,
-        Arc::clone(&depot),
-        Arc::clone(&dragon_depot),
-        Arc::clone(&klah_get_signal),
-        Arc::clone(&klah_deliever_signal)
-    );
-
-
-    let _handler1 = thread::spawn(move || {
-        steward.produce();
+    //Steward thread
+    thread::spawn(move || {
+        for _ in 0..5 {
+            steward.produce();
+            println!("{}", steward.resources_delievered());
+            println!("{}", steward.waiting());
+            steward.wait_for_received();
+            println!("{}", steward.finished_waiting());
+        }
     });
 
-    let _handler2 = thread::spawn(move || {
-        dragonrider1.wait_for_consumation();
-        dragonrider1.consume();
-        dragonrider1.group_resources();
+    //Stronghold threads
+    thread::spawn(move || {
+        for _ in 0..5 {
+            println!("{}", burnstone_stronghold.waiting());
+            burnstone_stronghold.wait_for_resources();
+            println!("{}", burnstone_stronghold.received());
+            burnstone_stronghold.resources_received();
+            burnstone_stronghold.distribute_resources();
+            burnstone_stronghold.consume_resources();
+        }
+    });
+    thread::spawn(move || {
+        for _ in 0..5 {
+            println!("{}", seaplum_stronghold.waiting());
+            seaplum_stronghold.wait_for_resources();
+            println!("{}", seaplum_stronghold.received());
+            seaplum_stronghold.resources_received();
+            seaplum_stronghold.distribute_resources();
+            seaplum_stronghold.consume_resources();
+        }
+    });
+    thread::spawn(move || {
+        for _ in 0..5 {
+            println!("{}", klah_stronghold.waiting());
+            klah_stronghold.wait_for_resources();
+            println!("{}", klah_stronghold.received());
+            klah_stronghold.resources_received();
+            klah_stronghold.distribute_resources();
+            klah_stronghold.consume_resources();
+        }
     });
 
-    let _handler3 = thread::spawn(move || {
-        dragonrider2.wait_for_consumation();
-        dragonrider2.consume();
-        dragonrider2.group_resources();
+    //Dragon rider threads
+    thread::spawn(move || {
+        for _ in 0..5 {
+            println!("{}", burnstone_dragon_rider.waiting_for_resource());
+            burnstone_dragon_rider.waiting_for_resource();
+            burnstone_dragon_rider.consume();
+            println!("{}", burnstone_dragon_rider.obtained_resource());
+            burnstone_dragon_rider.group_resources();
+        }
+    });
+    thread::spawn(move || {
+        for _ in 0..5 {
+            println!("{}", seaplum_dragon_rider.waiting_for_resource());
+            seaplum_dragon_rider.waiting_for_resource();
+            seaplum_dragon_rider.consume();
+            println!("{}", seaplum_dragon_rider.obtained_resource());
+            seaplum_dragon_rider.group_resources();
+        }
+    });
+    thread::spawn(move || {
+        for _ in 0..5 {
+            println!("{}", klah_dragon_rider.waiting_for_resource());
+            klah_dragon_rider.waiting_for_resource();
+            klah_dragon_rider.consume();
+            println!("{}", klah_dragon_rider.obtained_resource());
+            klah_dragon_rider.group_resources();
+        }
     });
 
-    let _handler4 = thread::spawn(move || {
-        dragonrider3.wait_for_consumation();
-        dragonrider3.consume();
-        dragonrider3.group_resources();
-    });
 
-
-    thread::sleep(Duration::from_secs(5));
-    let lock = &*dragon_depot;
-    let storage = lock.lock().unwrap();
-    println!("Resource1: {} \nResource2: {}", storage.collected_item1, storage.collected_item2);
+    if seconds > 0 {
+        // Waits for inputted seconds before quiting
+        thread::sleep(Duration::from_secs(seconds as u64));
+    } else {
+        // Runs forever until user presses Ctrl C to kill process
+        thread::park();
+    }
 
 }

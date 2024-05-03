@@ -27,50 +27,49 @@ pub struct Stronghold {
     // Signal to tell steward that supplies have been successfully received
     resources_received: Arc<(Mutex<bool>, Condvar)>,
     // Signal to receive that the resources that the stronghold is lacking is available
-    resources_available: Arc<(Mutex<bool>, Condvar)>,
-    // Signal to tell dragon riders to deliever needed resources
-    resources_deliever1: Arc<(Mutex<bool>, Condvar)>,
-    resources_deliever2: Arc<(Mutex<bool>, Condvar)>
+    resources_available: Arc<(Mutex<bool>, Condvar)>
 }
 
 impl Stronghold {
 
     pub fn new(name: String,
                resources_received: Arc<(Mutex<bool>, Condvar)>,
-               resources_available: Arc<(Mutex<bool>, Condvar)>,
-               resources_deliever1: Arc<(Mutex<bool>, Condvar)>,
-               resources_deliever2: Arc<(Mutex<bool>, Condvar)>) -> Stronghold {
+               resources_available: Arc<(Mutex<bool>, Condvar)>) -> Stronghold {
         Stronghold {
             name: name,
             resources_received: resources_received,
-            resources_available: resources_available,
-            resources_deliever1: resources_deliever1,
-            resources_deliever2: resources_deliever2
+            resources_available: resources_available
         }
     }
 
-    fn wait_for_resources(&self) {
+    pub fn wait_for_resources(&self) {
         let (lock, condvar) = &*self.resources_available;
         let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
-           println!("Stronghold is waiting for resources");
            !*condition 
         }).unwrap();
         *guard = false;
     }
 
-    fn deliever_my_resources(&self) {
-        
+    pub fn waiting(&self) -> String {
+        let mut message = "Stronghold ".to_string() + self.name.clone().as_str();
+        message = message + " waiting for its resources";
+        message
     }
 
+    pub fn received(&self) -> String {
+        let mut message = "Dragon riders had delievered resources to Stronghold ".to_string();
+        message = message + self.name.clone().as_str();
+        message
+    }
     
-    fn resources_received(&self) {
+    pub fn resources_received(&self) {
         let (lock, condvar) = &*self.resources_received;
         let mut received = lock.lock().unwrap();
         *received = true;
         condvar.notify_one();
     }
     
-    fn distribute_resources(&self) {
+    pub fn distribute_resources(&self) {
         let mut rng = thread_rng();
         let time_rng = ((rng.gen::<f64>() * MIN_SECONDS) + MIN_SECONDS) as u64;
         let time = Duration::from_secs(time_rng);
@@ -79,7 +78,9 @@ impl Stronghold {
         println!("Stronghold {} has finished distributing resources", self.name);
     }
 
-    fn consume_resources(&self) {
+    //Maybe make methods that returns strings?
+
+    pub fn consume_resources(&self) {
         let mut rng = thread_rng();
         let time_rng = ((rng.gen::<f64>() * MIN_SECONDS) + MIN_SECONDS) as u64;
         let time = Duration::from_secs(time_rng);

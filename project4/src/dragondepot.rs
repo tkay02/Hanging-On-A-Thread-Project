@@ -38,8 +38,8 @@ pub struct DragonDepot {
 impl DragonDepot {
     
     pub fn new(burnstone_signal:Arc<(Mutex<bool>, Condvar)>,
-                        seaplum_signal:Arc<(Mutex<bool>, Condvar)>,
-                        klah_signal:Arc<(Mutex<bool>, Condvar)>) -> DragonDepot {
+               seaplum_signal:Arc<(Mutex<bool>, Condvar)>,
+               klah_signal:Arc<(Mutex<bool>, Condvar)>) -> DragonDepot {
         DragonDepot {
             collected_item1: String::new(),
             collected_item2: String::new(),

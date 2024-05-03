@@ -14,7 +14,7 @@
 //! ## Instructor
 //! - Dr. William Kreahling
 
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use rand::{thread_rng, Rng};
 
 use crate::depot::Depot;
@@ -34,7 +34,9 @@ pub struct Steward {
     // Signal to send that seaplum is ready to be delivered
     seaplum_ready: Arc<(Mutex<bool>, Condvar)>,
     // Signal to send that klah is ready to be delivered
-    klah_ready: Arc<(Mutex<bool>, Condvar)>
+    klah_ready: Arc<(Mutex<bool>, Condvar)>,
+    resource1: String,
+    resource2: String
 }
 
 impl Steward {
@@ -49,51 +51,49 @@ impl Steward {
             stronghold_received: stronghold,
             firestone_ready: firestone,
             seaplum_ready: seaplum,
-            klah_ready: klah
+            klah_ready: klah,
+            resource1: String::new(),
+            resource2: String::new()
         }
     }
 
-    fn collect_resources() -> (String, String) {
+    fn collect_resources(&mut self) {
         let mut rng = thread_rng();
         let rng1 = (rng.gen::<f64>() * MAX_RESOURCES) as usize;
         let mut rng2 = (rng.gen::<f64>() * MAX_RESOURCES) as usize;
         while rng1 == rng2 {
             rng2 = (rng.gen::<f64>() * MAX_RESOURCES) as usize;
         }
-        let resource1 = String::from(RESOURCES[rng1]);
-        let resource2 = String::from(RESOURCES[rng2]);
-        (resource1, resource2)
+        self.resource1 = String::from(RESOURCES[rng1]);
+        self.resource2 = String::from(RESOURCES[rng2]);
     }
 
     pub fn produce(&mut self) {
-        let (resource1, resource2) = Steward::collect_resources();
+        self.collect_resources();
         let lock = &*self.depot;
         let mut depot = lock.lock().unwrap();
-        match resource1.as_str() {
-            "Burnstone" => {
-                depot.place_burnstone();
-                let (lock2, condvar) = &*self.firestone_ready;
-                let mut ready = lock2.lock().unwrap();
-                *ready = true;
-                condvar.notify_one();
-            },
-            "Seaplum" => {
-                depot.place_seaplum();
-                let (lock2, condvar) = &*self.seaplum_ready;
-                let mut ready = lock2.lock().unwrap();
-                *ready = true;
-                condvar.notify_one();
-            }
-            "Klah" => {
-                depot.place_kleh();
-                let (lock2, condvar) = &*self.klah_ready;
-                let mut ready = lock2.lock().unwrap();
-                *ready = true;
-                condvar.notify_one();
-            },
-            _ => { unreachable!() }
-        }
-        match resource2.as_str() {
+        self.resource_ready(self.resource1.clone(), &mut depot);
+        self.resource_ready(self.resource2.clone(), &mut depot);
+    }
+
+    pub fn resources_delievered(&self) -> String {
+        let mut message = "The steward has delievered resources ".to_string();
+        message = message + self.resource1.clone().as_str() + " and " + 
+                  self.resource2.clone().as_mut_str() + " to the depot";
+        message
+    }
+
+    pub fn waiting(&self) -> String {
+        "The steward is waiting for stronghold to collect supplies".to_string()
+    }
+
+    pub fn finished_waiting(&self) -> String {
+        "Steward is now ready to collect resources to give to the depot".to_string()
+    }
+
+    // I hope this helper method works
+    fn resource_ready(&self, resource:String, depot:&mut MutexGuard<Depot>) {
+        match resource.as_str() {
             "Burnstone" => {
                 depot.place_burnstone();
                 let (lock2, condvar) = &*self.firestone_ready;
@@ -121,10 +121,9 @@ impl Steward {
 
     
 
-    fn wait_for_received(&self) {
+    pub fn wait_for_received(&self) {
         let (lock, condvar) = &*self.stronghold_received;
         let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
-            println!("Waiting for received condition");
             !*condition
         }).unwrap();
         *guard = false;
