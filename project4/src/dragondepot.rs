@@ -47,6 +47,11 @@ impl DragonDepot {
     /// Constructs a new `Dragon Depot` instance with the ability to place
     /// and deplete resources. It also has the ability to check to see if it
     /// currently has any of the resources.
+    /// 
+    /// # Arguments
+    /// * `burnstone_signal`: Signal to notify Burnstone Stronghold that its resources are ready.
+    /// * `seaplum_signal`: Signal to notify Seaplum Stronghold that its resources are ready.
+    /// * `klah_signal`: Signal to notify Klah Stronghold that its resources are ready.
     pub fn new(burnstone_signal:Arc<(Mutex<bool>, Condvar)>,
                seaplum_signal:Arc<(Mutex<bool>, Condvar)>,
                klah_signal:Arc<(Mutex<bool>, Condvar)>) -> DragonDepot {
@@ -78,16 +83,19 @@ impl DragonDepot {
         }
         self.item_count += 1;
         if self.item_count == MAX_ITEM {
+            // If the depot doesn't have burnstone, notifies Burnstone Stronghold
             if !self.has_burnstone() {
                 let (lock, condvar) = &*self.burnstone_signal;
                 let mut ready = lock.lock().unwrap();
                 *ready = true;
                 condvar.notify_one();
+            // If the depot doesn't have seaplum, notifies Seaplum Stronghold
             } else if !self.has_seaplum() {
                 let (lock, condvar) = &*self.seaplum_signal;
                 let mut ready = lock.lock().unwrap();
                 *ready = true;
                 condvar.notify_one();
+            // If the depot doesn't have klah, notifies Klah Stronghold
             } else if !self.has_klah() {
                 let (lock, condvar) = &*self.klah_signal;
                 let mut ready = lock.lock().unwrap();

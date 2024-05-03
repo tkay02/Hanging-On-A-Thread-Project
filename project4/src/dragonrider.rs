@@ -44,6 +44,14 @@ pub struct DragonRider {
 impl DragonRider {
     /// Constructs a new `DragonRider` instance with the ability to obtain
     /// and deliver resources.
+    /// 
+    /// * `resource`: The name of the resource that uniquely identifies a dragon rider.
+    /// * `depot`: A reference to the depot where the dragon rider takes resources from.
+    /// * `dragon_depot`: A reference to the mini depot where the dragon rider drops off their
+    /// resources.
+    /// * `depot_signal`: A signal that notifies the dragon rider that their resource is available
+    /// in the depot.
+    /// * `writer`: The logger to write status info to.
     pub fn new(resource:String,
                depot:Arc<Mutex<Depot>>,
                dragon_depot:Arc<Mutex<DragonDepot>>,
@@ -89,6 +97,9 @@ impl DragonRider {
     }
 
     /// Writes a status message to the logger.
+    /// 
+    /// # Arguments
+    /// * `message`: The message that is being written to the logger.
     fn write_status(&self, message:String) {
         let lock = &*self.writer;
         let mut writer = lock.lock().unwrap();

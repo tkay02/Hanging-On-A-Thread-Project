@@ -40,7 +40,7 @@ pub struct Logger {
 impl Logger {
     /// Creates a new `Logger` instance, optionally writing to a file.
     ///
-    /// # Parameters
+    /// # Arguments
     /// - `file_name`: The path to the file where logs should be written.
     /// - `write_to_file`: A boolean flag that, if true, initializes file writing.
     ///
@@ -66,7 +66,7 @@ impl Logger {
     /// the process will exit with an error status. If no file writer is present, the message
     /// will be printed to standard output.
     ///
-    /// # Parameters
+    /// # Arguments
     /// - `message`: The string message to log.
     ///
     /// # Panics

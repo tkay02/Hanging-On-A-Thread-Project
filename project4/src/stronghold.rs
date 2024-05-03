@@ -35,8 +35,10 @@ const MIN_SECONDS:f64 = 5.0;
 ///
 /// # Fields
 /// - `name`: The name of the stronghold, usually related to the specific resource it manages.
-/// - `resources_received`: A signal to notify the steward that resources have been successfully received.
-/// - `resources_available`: A signal indicating that resources required by the stronghold are available for collection.
+/// - `resources_received`: A signal to notify the steward that resources have been successfully 
+///    received.
+/// - `resources_available`: A signal indicating that resources required by the stronghold are 
+///    available for collection.
 /// - `writer`: A logger for recording status updates and operations.
 pub struct Stronghold {
     name: String,
@@ -47,6 +49,13 @@ pub struct Stronghold {
 
 impl Stronghold {
     /// Constructs a new `Stronghold`.
+    /// 
+    /// # Arguments
+    /// * `name`: The name of the stronghold and the main resource it harvests.
+    /// * `resources_received`: The signal to notify the steward that resources have been 
+    ///    successfully received.
+    /// * `resources_available`: The signal to notify stronghold that its resources are available.
+    /// * `writer`: The logger to write status info to.
     pub fn new(name: String,
                resources_received: Arc<(Mutex<bool>, Condvar)>,
                resources_available: Arc<(Mutex<bool>, Condvar)>,
@@ -79,6 +88,9 @@ impl Stronghold {
     }
 
     /// Writes a status message to the logger.
+    /// 
+    /// # Arguments
+    /// * `message`: The message that is being written to the logger.
     fn write_status(&self, message:String) {
         let lock = &*self.writer;
         let mut writer = lock.lock().unwrap();
@@ -101,6 +113,8 @@ impl Stronghold {
     }
 
     /// Distributes resources within the stronghold.
+    /// 
+    /// Waits for a random amount of time (between 5 to 9 seconds).
     fn distribute_resources(&self) {
         let mut rng = thread_rng();
         let time_rng = ((rng.gen::<f64>() * MIN_SECONDS) + MIN_SECONDS) as u64;
@@ -110,7 +124,13 @@ impl Stronghold {
         self.write_status(self.distribute_or_consume(true, true));
     }
 
-    /// Generates status messages for distributing or consuming resources.
+    /// Returns a status message for distributing or consuming resources.
+    /// 
+    /// # Arguments
+    /// * `distributing`: Boolean that determines if the stronghold is distributing or consuming
+    ///    with true representing that the stronghold is distributing.
+    /// * `finished`: Boolean that determines if the stronghold has started or finished with true
+    ///    representing that the stronghold has finished.
     fn distribute_or_consume(&self, distributing:bool, finished:bool) -> String {
         let message = "Stronghold ".to_string() + self.name.clone().as_str();
         if distributing {
@@ -128,6 +148,9 @@ impl Stronghold {
         }
     }
 
+    /// Consumes resources within the stronghold.
+    /// 
+    /// Waits for a random amount of time (between 5 to 9 seconds).
     fn consume_resources(&self) {
         let mut rng = thread_rng();
         let time_rng = ((rng.gen::<f64>() * MIN_SECONDS) + MIN_SECONDS) as u64;
@@ -137,6 +160,7 @@ impl Stronghold {
         self.write_status(self.distribute_or_consume(false, true));
     }
 
+    /// Executes the full cycle of resource handling from waiting to consumption.
     pub fn go(&self) {
         loop {
             self.wait_for_resources();

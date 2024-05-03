@@ -59,6 +59,15 @@ pub struct Steward {
 
 impl Steward {
     /// Constructs a new `Steward`.
+    /// 
+    /// # Arguments
+    /// * `depot`: A reference to the depot where the steward will deliever resources.
+    /// * `stronghold`: The signal that tells the stewards that the depot's resources are
+    /// collected by a stronghold.
+    /// * `firestone`: Signal that indicates that burnstone has been supplied to the depot.
+    /// * `seaplum`: Signal that indicates that seaplum has been supplied to the depot.
+    /// * `klah`: Signal that indicates that klah has been supplied to the depot.
+    /// * `writer`: The logger to write status info to.
     pub fn new(depot:Arc<Mutex<Depot>>, 
                stronghold:Arc<(Mutex<bool>, Condvar)>,
                firestone:Arc<(Mutex<bool>, Condvar)>, 
@@ -117,13 +126,16 @@ impl Steward {
     }
 
     /// Outputs a status message to the logger.
+    /// 
+    /// # Arguments
+    /// * `message`: The message that is being written to the logger.
     fn write_status(&self, message:String) {
         let lock = &*self.writer;
         let mut writer = lock.lock().unwrap();
         writer.write(message);
     }
 
-    /// Helper method to signal the depot that a resource is ready.
+    /// Helper method to signal that a resource is ready in the depot.
     fn resource_ready(&self, resource:String, depot:&mut MutexGuard<Depot>) {
         match resource.as_str() {
             "Burnstone" => {
