@@ -44,7 +44,7 @@ pub struct DragonRider {
 impl DragonRider {
     /// Constructs a new `DragonRider` instance with the ability to obtain
     /// and deliver resources.
-    pub fn new(resource:String, 
+    pub fn new(resource:String,
                depot:Arc<Mutex<Depot>>,
                dragon_depot:Arc<Mutex<DragonDepot>>,
                depot_signal:Arc<(Mutex<bool>, Condvar)>,
