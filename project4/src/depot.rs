@@ -2,10 +2,12 @@
 //! # Version: May 3rd 2024
 //!
 //! ## Description
-//!
-//!
-//! ## Dependencies
-//!
+//! Sets up the depot for holding each type of resource:
+//! - klah
+//! - burnstone
+//! - seaplum
+//! Has the functionality of taking or placing each resource, checking if it is empty,
+//! and testing the status of each resource.
 //!
 //! ## Authors
 //! - Dylan Miller

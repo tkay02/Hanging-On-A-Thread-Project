@@ -2,10 +2,17 @@
 //! # Version: May 3rd 2024
 //!
 //! ## Description
-//!
+//! Sets up the structure for strongholds that has:
+//! - The name of the stronghold (which contains the resource)
+//! - A signal to tell the steward that supplies have been successfully received
+//! - A signal to receive that the resources that the stronghold is lacking is available
+//! The strongholds also have the functionality of waiting and receiving resources. Then it
+//! has the ability to distribute and consume resources.
 //!
 //! ## Dependencies
-//!
+//! This module depends on the following external crate:
+//! - use std::{sync::{Arc, Condvar, Mutex}, thread, time::Duration};
+//! - use rand::{thread_rng, Rng};
 //!
 //! ## Authors
 //! - Dylan Miller
@@ -15,7 +22,6 @@
 //! - Dr. William Kreahling
 
 use std::{sync::{Arc, Condvar, Mutex}, thread, time::Duration};
-
 use rand::{thread_rng, Rng};
 
 const MIN_SECONDS:f64 = 5.0;

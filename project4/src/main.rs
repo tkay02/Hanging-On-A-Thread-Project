@@ -2,10 +2,16 @@
 //! # Version: May 3rd 2024
 //!
 //! ## Description
-//!
+//! The entry point to our program. This file holds the logic for
+//! taking command line arguments, logging to either the terminal
+//! or to a file, then setting up all structures and threads.
 //!
 //! ## Dependencies
-//!
+//! This module depends on the following external crates:
+//! - use std::{env, process}
+//! - use std::sync::{Arc, Condvar, Mutex}
+//! - use std::thread
+//! - use std::time::Duration
 //!
 //! ## Authors
 //! - Dylan Miller
@@ -36,6 +42,14 @@ use crate::dragondepot::DragonDepot;
 
 const LOG_FILE:&str = "log.txt";
 
+/// The entry point for our program
+///
+/// Sets up logic for taking command line arguments,
+/// logging to either the terminal or a file,
+/// setting up the different structures,
+/// then creating all the threads,
+/// then running until ctrl + c is pressed
+///
 fn main() {
     
     let args:Vec<String> = env::args().collect();
