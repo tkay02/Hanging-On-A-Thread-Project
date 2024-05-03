@@ -20,6 +20,7 @@ pub mod dragonrider;
 pub mod stronghold;
 mod depot;
 pub mod dragondepot;
+mod logger;
 
 use std::{env, process};
 use std::sync::{Arc, Condvar, Mutex};
