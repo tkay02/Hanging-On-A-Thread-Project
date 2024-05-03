@@ -70,7 +70,7 @@ impl DragonRider {
                 let _ = &depot.take_seaplum();
             },
             "Klah" => {
-                let _ = &depot.take_kleh();
+                let _ = &depot.take_klah();
             }
             _ => { unreachable!() }
         }

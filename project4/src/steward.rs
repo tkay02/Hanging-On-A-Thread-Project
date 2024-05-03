@@ -99,7 +99,7 @@ impl Steward {
                 condvar.notify_one();
             }
             "Klah" => {
-                depot.place_kleh();
+                depot.place_klah();
                 let (lock2, condvar) = &*self.klah_ready;
                 let mut ready = lock2.lock().unwrap();
                 *ready = true;
@@ -124,7 +124,7 @@ impl Steward {
                 condvar.notify_one();
             }
             "Klah" => {
-                depot.place_kleh();
+                depot.place_klah();
                 let (lock2, condvar) = &*self.klah_ready;
                 let mut ready = lock2.lock().unwrap();
                 *ready = true;
@@ -168,7 +168,7 @@ impl Steward {
                 condvar.notify_one();
             }
             "Klah" => {
-                depot.place_kleh();
+                depot.place_klah();
                 let (lock2, condvar) = &*self.klah_ready;
                 let mut ready = lock2.lock().unwrap();
                 *ready = true;
