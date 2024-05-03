@@ -9,8 +9,9 @@
 //! This file also checks for each resource. Then it places and depletes each resource.
 //!
 //! ## Dependencies
-//! This module depends on the following external crate:
-//! - use std::sync::{Arc,Mutex,Condvar};
+//! This module utilizes Rust's standard synchronization primitives from the `std::sync` package,
+//! including `Arc`, `Mutex`, and `Condvar`, to ensure thread-safe operations across multiple
+//! dragon riders and resource distribution handlers.
 //!
 //! ## Authors
 //! - Dylan Miller
@@ -24,7 +25,7 @@ use std::sync::{Arc,Mutex,Condvar};
 /// Constant for the maximum amount of items allowed.
 const MAX_ITEM:usize = 2;
 
-/// Represents a Depot for the dragon riders to interact with
+/// Structure that represents a Depot for the dragon riders to interact with
 ///
 /// # Fields
 /// - `collected_item1`: First item collected by the dragon riders
@@ -59,13 +60,16 @@ impl DragonDepot {
         }
     }
 
-    /// Places any of the resources within the depot itself and signals
-    /// that it is ready to be picked up. Once the items are picked up,
-    /// it depletes the collected items back to zero.
+    /// Places a resource in the depot and checks
+    /// if it is time to notify the respective stronghold.
     ///
     /// # Parameters
-    /// - `self`: A reference to the depot itself.
-    /// - `resource`: The resource that is being placed
+    /// - `resource`: The type of resource being placed into the depot.
+    ///
+    /// This method increments the item count and places the resource into an available slot.
+    /// Once two resources are collected, it checks each resource type and signals the
+    /// corresponding stronghold if its resource is available. After signaling,
+    /// it depletes the resources.
     pub fn place_resource(&mut self, resource:String) {
         if self.item_count == 0 {
             self.collected_item1 = resource;
@@ -97,27 +101,18 @@ impl DragonDepot {
     }
 
     /// Test to see if klah is one of the collected items
-    ///
-    /// # Parameters
-    /// - `self`: A reference to the depot itself.
     fn has_klah(&self) -> bool {
         self.collected_item1 == String::from("Klah") ||
         self.collected_item2 == String::from("Klah")
     }
 
     /// Test to see if burnstone is one of the collected items
-    ///
-    /// # Parameters
-    /// - `self`: A reference to the depot itself.
     fn has_burnstone(&self) -> bool {
         self.collected_item1 == String::from("Burnstone") ||
         self.collected_item2 == String::from("Burnstone")
     }
 
     /// Test to see if seaplum is one of the collected items
-    ///
-    /// # Parameters
-    /// - `self`: A reference to the depot itself.
     fn has_seaplum(&self) -> bool {
         self.collected_item1 == String::from("Seaplum") ||
         self.collected_item2 == String::from("Seaplum")
@@ -125,9 +120,6 @@ impl DragonDepot {
 
     /// Sets the item_count to 0 and makes the
     /// collected items reset to fresh strings.
-    ///
-    /// # Parameters
-    /// - `self`: A reference to the depot itself.
     fn deplete(&mut self) {
         self.item_count = 0;
         self.collected_item1 = String::new();
