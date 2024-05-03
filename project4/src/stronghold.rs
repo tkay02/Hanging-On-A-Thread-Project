@@ -44,9 +44,12 @@ impl Stronghold {
 
     pub fn wait_for_resources(&self) {
         let (lock, condvar) = &*self.resources_available;
-        let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
+        let guard = lock.lock().unwrap();
+        println!("{}", self.waiting());
+        let mut guard = condvar.wait_while(guard, |condition| {
            !*condition 
         }).unwrap();
+        println!("{}", self.received());
         *guard = false;
     }
 

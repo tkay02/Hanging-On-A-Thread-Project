@@ -67,11 +67,14 @@ impl DragonRider {
             }
             _ => { unreachable!() }
         }
+        println!("{}", self.obtained_resource());
     }
 
     pub fn wait_for_consumation(&self) {
         let (lock, condvar) = &*self.depot_signal;
-        let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
+        let guard = lock.lock().unwrap();
+        println!("{}",self.waiting_for_resource());
+        let mut guard = condvar.wait_while(guard, |condition| {
             !*condition
         }).unwrap();
         *guard = false;

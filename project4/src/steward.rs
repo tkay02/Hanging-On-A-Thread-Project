@@ -72,8 +72,57 @@ impl Steward {
         self.collect_resources();
         let lock = &*self.depot;
         let mut depot = lock.lock().unwrap();
-        self.resource_ready(self.resource1.clone(), &mut depot);
-        self.resource_ready(self.resource2.clone(), &mut depot);
+        //self.resource_ready(self.resource1.clone(), &mut depot);
+        match self.resource1.as_str() {
+            "Burnstone" => {
+                depot.place_burnstone();
+                let (lock2, condvar) = &*self.firestone_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            },
+            "Seaplum" => {
+                depot.place_seaplum();
+                let (lock2, condvar) = &*self.seaplum_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            }
+            "Klah" => {
+                depot.place_kleh();
+                let (lock2, condvar) = &*self.klah_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            },
+            _ => { unreachable!() }
+        }
+        //self.resource_ready(self.resource2.clone(), &mut depot);
+        match self.resource2.as_str() {
+            "Burnstone" => {
+                depot.place_burnstone();
+                let (lock2, condvar) = &*self.firestone_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            },
+            "Seaplum" => {
+                depot.place_seaplum();
+                let (lock2, condvar) = &*self.seaplum_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            }
+            "Klah" => {
+                depot.place_kleh();
+                let (lock2, condvar) = &*self.klah_ready;
+                let mut ready = lock2.lock().unwrap();
+                *ready = true;
+                condvar.notify_one();
+            },
+            _ => { unreachable!() }
+        }
+        println!("{}", self.resources_delievered());
     }
 
     pub fn resources_delievered(&self) -> String {
@@ -123,9 +172,12 @@ impl Steward {
 
     pub fn wait_for_received(&self) {
         let (lock, condvar) = &*self.stronghold_received;
-        let mut guard = condvar.wait_while(lock.lock().unwrap(), |condition| {
+        let guard = lock.lock().unwrap();
+        println!("{}", self.waiting());
+        let mut guard = condvar.wait_while(guard, |condition| {
             !*condition
         }).unwrap();
+        println!("{}", self.finished_waiting());
         *guard = false;
     }
 
