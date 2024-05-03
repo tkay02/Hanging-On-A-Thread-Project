@@ -23,7 +23,7 @@
 
 use std::sync::{Arc, Condvar, Mutex};
 
-use crate::{depot::Depot, dragondepot::DragonDepot};
+use crate::{depot::Depot, dragondepot::DragonDepot, logger::Logger};
 
 
 pub struct DragonRider {
@@ -35,6 +35,8 @@ pub struct DragonRider {
     dragon_depot: Arc<Mutex<DragonDepot>>,
     // Signal that depot has resource that is ready to be collected
     depot_signal: Arc<(Mutex<bool>, Condvar)>,
+    // Used to print status onto Stdout or a file
+    writer: Arc<Mutex<Logger>>
 }
 
 impl DragonRider {
@@ -42,12 +44,14 @@ impl DragonRider {
     pub fn new(resource:String, 
                depot:Arc<Mutex<Depot>>,
                dragon_depot:Arc<Mutex<DragonDepot>>,
-               depot_signal:Arc<(Mutex<bool>, Condvar)>) -> DragonRider {
+               depot_signal:Arc<(Mutex<bool>, Condvar)>,
+               writer:Arc<Mutex<Logger>>) -> DragonRider {
         DragonRider {
             resource_type: resource,
-            depot: depot,
-            dragon_depot: dragon_depot,
-            depot_signal: depot_signal
+            depot,
+            dragon_depot,
+            depot_signal,
+            writer
         }
     }
 
@@ -74,13 +78,19 @@ impl DragonRider {
             }
             _ => { unreachable!() }
         }
-        println!("{}", self.obtained_resource());
+        self.write_status(self.obtained_resource());
+    }
+
+    fn write_status(&self, message:String) {
+        let lock = &*self.writer;
+        let writer = lock.lock().unwrap();
+        writer.write(message);
     }
 
     pub fn wait_for_consumation(&self) {
         let (lock, condvar) = &*self.depot_signal;
         let guard = lock.lock().unwrap();
-        println!("{}",self.waiting_for_resource());
+        self.write_status(self.waiting_for_resource());
         let mut guard = condvar.wait_while(guard, |condition| {
             !*condition
         }).unwrap();

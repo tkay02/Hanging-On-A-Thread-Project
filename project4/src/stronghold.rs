@@ -23,6 +23,7 @@
 
 use std::{sync::{Arc, Condvar, Mutex}, thread, time::Duration};
 use rand::{thread_rng, Rng};
+use crate::logger::Logger;
 
 const MIN_SECONDS:f64 = 5.0;
 
@@ -33,29 +34,33 @@ pub struct Stronghold {
     // Signal to tell steward that supplies have been successfully received
     resources_received: Arc<(Mutex<bool>, Condvar)>,
     // Signal to receive that the resources that the stronghold is lacking is available
-    resources_available: Arc<(Mutex<bool>, Condvar)>
+    resources_available: Arc<(Mutex<bool>, Condvar)>,
+    // Write status to Stdout or to a file
+    writer: Arc<Mutex<Logger>>
 }
 
 impl Stronghold {
 
     pub fn new(name: String,
                resources_received: Arc<(Mutex<bool>, Condvar)>,
-               resources_available: Arc<(Mutex<bool>, Condvar)>) -> Stronghold {
+               resources_available: Arc<(Mutex<bool>, Condvar)>,
+               writer: Arc<Mutex<Logger>>) -> Stronghold {
         Stronghold {
-            name: name,
-            resources_received: resources_received,
-            resources_available: resources_available
+            name,
+            resources_received,
+            resources_available,
+            writer
         }
     }
 
     pub fn wait_for_resources(&self) {
         let (lock, condvar) = &*self.resources_available;
         let guard = lock.lock().unwrap();
-        println!("{}", self.waiting());
+        self.write_status(self.waiting());
         let mut guard = condvar.wait_while(guard, |condition| {
            !*condition 
         }).unwrap();
-        println!("{}", self.received());
+        self.write_status(self.received());
         *guard = false;
     }
 
@@ -63,6 +68,12 @@ impl Stronghold {
         let mut message = "Stronghold ".to_string() + self.name.clone().as_str();
         message = message + " waiting for its resources";
         message
+    }
+
+    fn write_status(&self, message:String) {
+        let lock = &*self.writer;
+        let writer = lock.lock().unwrap();
+        writer.write(message);
     }
 
     pub fn received(&self) -> String {
@@ -82,9 +93,26 @@ impl Stronghold {
         let mut rng = thread_rng();
         let time_rng = ((rng.gen::<f64>() * MIN_SECONDS) + MIN_SECONDS) as u64;
         let time = Duration::from_secs(time_rng);
-        println!("Stronghold {} is now distributing resources", self.name);
+        self.write_status(self.distribute_or_consume(true, false));
         thread::sleep(time);
-        println!("Stronghold {} has finished distributing resources", self.name);
+        self.write_status(self.distribute_or_consume(true, true));
+    }
+
+    fn distribute_or_consume(&self, distributing:bool, finished:bool) -> String {
+        let message = "Stronghold ".to_string() + self.name.clone().as_str();
+        if distributing {
+            if finished {
+                message + " has finished distributing resources"
+            } else {
+                message + " is now distributing resources"
+            }
+        } else {
+            if finished {
+                message + " has finished consuming resources"
+            } else {
+                message + " is now consuming resources"
+            }
+        }
     }
 
     //Maybe make methods that returns strings?
@@ -93,9 +121,9 @@ impl Stronghold {
         let mut rng = thread_rng();
         let time_rng = ((rng.gen::<f64>() * MIN_SECONDS) + MIN_SECONDS) as u64;
         let time = Duration::from_secs(time_rng);
-        println!("Stronghold {} is now consuming resources", self.name);
+        self.write_status(self.distribute_or_consume(false, false));
         thread::sleep(time);
-        println!("Stronghold {} has finished consuming resources", self.name);
+        self.write_status(self.distribute_or_consume(false, true));
     }
 
     pub fn go(&mut self) {

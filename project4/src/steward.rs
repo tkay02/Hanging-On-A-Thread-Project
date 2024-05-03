@@ -60,12 +60,12 @@ impl Steward {
                klah:Arc<(Mutex<bool>, Condvar)>,
                writer:Arc<Mutex<Logger>>) -> Steward {
         Steward {
-            depot: depot,
+            depot,
             stronghold_received: stronghold,
             firestone_ready: firestone,
             seaplum_ready: seaplum,
             klah_ready: klah,
-            writer: writer,
+            writer,
             resource1: String::new(),
             resource2: String::new()
         }
