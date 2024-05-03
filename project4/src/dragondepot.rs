@@ -24,7 +24,7 @@ use std::sync::{Arc,Mutex,Condvar};
 /// Constant for the maximum amount of items allowed.
 const MAX_ITEM:usize = 2;
 
-/// Represents a Depot for the dragon riders to interact with
+/// Structure that represents a Depot for the dragon riders to interact with
 ///
 /// # Fields
 /// - `collected_item1`: First item collected by the dragon riders

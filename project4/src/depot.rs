@@ -18,7 +18,7 @@
 
 use crate::steward::RESOURCES;
 
-/// Represents a Depot that houses resources
+/// Structure that represents a Depot that houses resources
 ///
 /// # Fields
 /// - `burnstone`: provides defense and power to the strongholds

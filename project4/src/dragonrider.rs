@@ -23,24 +23,28 @@
 
 use std::sync::{Arc, Condvar, Mutex};
 
-use crate::{depot::Depot, dragondepot::DragonDepot, logger::Logger};
+use crate::{depot::Depot, dragondepot::DragonDepot};
+use crate::logger::Logger;
 
-
+/// Structure that represents a Dragon Rider that will carry resources to the depot
+///
+/// # Fields
+/// - `resource_type`: The type of resource that the dragonrider is carrying
+/// - `depot`: A reference to the depot to obtain resources from
+/// - `dragon_depot`: A reference to the dragon depot that stores resources from the dragonriders
+/// - `depot_signal`: A signal that the depot has resources that are ready to be collected
+/// - `writer`: Used to print status onto Stdout or a file
 pub struct DragonRider {
-    // Type of resource that the dragonrider is carrying
     resource_type: String,
-    // Reference to depot to obtain resources
     depot: Arc<Mutex<Depot>>,
-    // Reference to depot to store resources obtained by the dragonriders
     dragon_depot: Arc<Mutex<DragonDepot>>,
-    // Signal that depot has resource that is ready to be collected
     depot_signal: Arc<(Mutex<bool>, Condvar)>,
-    // Used to print status onto Stdout or a file
     writer: Arc<Mutex<Logger>>
 }
 
 impl DragonRider {
-
+    /// Constructs a new `DragonRider` instance with the ability to obtain
+    /// and deliver resources.
     pub fn new(resource:String, 
                depot:Arc<Mutex<Depot>>,
                dragon_depot:Arc<Mutex<DragonDepot>>,
@@ -55,10 +59,18 @@ impl DragonRider {
         }
     }
 
+    /// Wait for the resource to be available to obtain
+    ///
+    /// # Parameters
+    /// - `self`: A reference to the dragon rider itself.
     pub fn waiting_for_resource(&self) -> String {
         self.resource_type.clone() + " dragon rider is waiting for resource"
     }
 
+    /// Obtain the resource
+    ///
+    /// # Parameters
+    /// - `self`: A reference to the dragon rider itself.
     pub fn obtained_resource(&self) -> String {
         self.resource_type.clone() + " dragon rider has obtained resource"
     }
