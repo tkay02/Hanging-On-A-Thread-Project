@@ -108,7 +108,7 @@ impl Steward {
 
     fn write_status(&self, message:String) {
         let lock = &*self.writer;
-        let writer = lock.lock().unwrap();
+        let mut writer = lock.lock().unwrap();
         writer.write(message);
     }
 

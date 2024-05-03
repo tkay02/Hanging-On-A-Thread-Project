@@ -34,6 +34,7 @@ use std::thread;
 use std::time::Duration;
 
 use depot::Depot;
+use logger::Logger;
 use steward::Steward;
 
 use dragonrider::DragonRider;
@@ -70,8 +71,15 @@ fn main() {
         println!("Invalid argument for true or false condition for logging");
         process::exit(1);
     }
-
     //Insert code for log file creation
+    let is_writable = if log_arg.as_str() == "T" { true } else { false };
+    let logger_result = Logger::new(LOG_FILE.to_string(), is_writable);
+    if logger_result.is_err() {
+        println!("File does not exist for logger to write to");
+        process::exit(1);
+    }
+    let logger = logger_result.unwrap();
+    let log_arc = Arc::new(Mutex::new(logger));
 
     //Depot where the steward stores resources to/the dragon riders take from
     let depot = Arc::new(Mutex::new(Depot::new()));
@@ -100,37 +108,39 @@ fn main() {
     //Steward
     let mut steward = Steward::new(
         Arc::clone(&depot), Arc::clone(&steward_signal), Arc::clone(&burnstone_signal),
-        Arc::clone(&seaplum_signal), Arc::clone(&klah_signal)
+        Arc::clone(&seaplum_signal), Arc::clone(&klah_signal), Arc::clone(&log_arc)
     );
 
     //Burnstone Stronghold
     let burnstone_stronghold = Stronghold::new(
         "Burnstone".to_string(), Arc::clone(&steward_signal), 
-        Arc::clone(&burnstone_stronghold_signal)
+        Arc::clone(&burnstone_stronghold_signal), Arc::clone(&log_arc)
     );
     //Seaplum Stronghold
     let seaplum_stronghold = Stronghold::new(
-        "Seaplum".to_string(), Arc::clone(&steward_signal), Arc::clone(&seaplum_stronghold_signal)
+        "Seaplum".to_string(), Arc::clone(&steward_signal), 
+        Arc::clone(&seaplum_stronghold_signal), Arc::clone(&log_arc)
     );
     //Klah Stronghold
     let klah_stronghold = Stronghold::new(
-        "Klah".to_string(), Arc::clone(&steward_signal), Arc::clone(&klah_stronghold_signal)
+        "Klah".to_string(), Arc::clone(&steward_signal), Arc::clone(&klah_stronghold_signal),
+        Arc::clone(&log_arc)
     );
 
     //Dragon Rider for Burnstone resource
     let mut burnstone_dragon_rider = DragonRider::new(
         "Burnstone".to_string(), Arc::clone(&depot), Arc::clone(&dragon_depot),
-        Arc::clone(&burnstone_signal)
+        Arc::clone(&burnstone_signal), Arc::clone(&log_arc)
     );
     //Dragon Rider for Seaplum resource
     let mut seaplum_dragon_rider = DragonRider::new(
         "Seaplum".to_string(), Arc::clone(&depot), Arc::clone(&dragon_depot),
-        Arc::clone(&seaplum_signal)
+        Arc::clone(&seaplum_signal), Arc::clone(&log_arc)
     );
     //Dragon Rider for Klah resource
     let mut klah_dragon_rider = DragonRider::new(
         "Klah".to_string(), Arc::clone(&depot), Arc::clone(&dragon_depot),
-        Arc::clone(&klah_signal)
+        Arc::clone(&klah_signal), Arc::clone(&log_arc)
     );
 
     //Steward thread
