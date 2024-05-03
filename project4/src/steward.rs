@@ -2,10 +2,20 @@
 //! # Version: May 3rd 2024
 //!
 //! ## Description
-//!
+//! Sets up the structure for the Steward which holds references to:
+//! - shared memory of depot
+//! - both resources
+//! It also holds signals for:
+//! - receiving from a stronghold
+//! - message that firestone is ready to be delivered
+//! - message that seaplum is ready to be delivered
+//! - message that klah is ready to be delivered
+//! The Steward collects, receives, produces, and delivers resources
 //!
 //! ## Dependencies
-//!
+//! This module depends on the following external crate:
+//! - use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+//! - use rand::{thread_rng, Rng};
 //!
 //! ## Authors
 //! - Dylan Miller
@@ -120,7 +130,7 @@ impl Steward {
                 condvar.notify_one();
             }
             "Klah" => {
-                depot.place_kleh();
+                depot.place_klah();
                 let (lock2, condvar) = &*self.klah_ready;
                 let mut ready = lock2.lock().unwrap();
                 *ready = true;

@@ -2,10 +2,15 @@
 //! # Version: May 3rd 2024
 //!
 //! ## Description
-//!
+//! Sets up the dragon depot structure which holds:
+//! - The collected items
+//! - A count of the items
+//! - Signals for each stronghold messaging that the resources are available
+//! This file also checks for each resource. Then it places and depletes each resource.
 //!
 //! ## Dependencies
-//!
+//! This module depends on the following external crate:
+//! - use std::sync::{Arc,Mutex,Condvar};
 //!
 //! ## Authors
 //! - Dylan Miller

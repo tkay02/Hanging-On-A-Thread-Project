@@ -2,10 +2,12 @@
 //! # Version: May 3rd 2024
 //!
 //! ## Description
-//!
-//!
-//! ## Dependencies
-//!
+//! Sets up the depot for holding each type of resource:
+//! - klah
+//! - burnstone
+//! - seaplum
+//! Has the functionality of taking or placing each resource, checking if it is empty,
+//! and testing the status of each resource.
 //!
 //! ## Authors
 //! - Dylan Miller
@@ -16,10 +18,16 @@
 
 use crate::steward::RESOURCES;
 
+/// Represents a Depot that houses resources
+///
+/// # Fields
+/// - `burnstone`: the length of each needle used in the experiment.
+/// - `seaplum`: the distance between parallel lines on the surface.
+/// - `klah`: total number of needles to be dropped in the experiment.
 pub struct Depot {
     burnstone: String,
     seaplum: String,
-    kleh: String
+    klah: String
 }
 
 impl Depot {
@@ -28,7 +36,7 @@ impl Depot {
         Depot {
             burnstone: String::new(),
             seaplum: String::new(),
-            kleh: String::new()
+            klah: String::new()
         }
     }
 
@@ -52,14 +60,14 @@ impl Depot {
         seaplum
     }
 
-    pub fn place_kleh(&mut self) {
-        self.kleh = String::from(RESOURCES[2]);
+    pub fn place_klah(&mut self) {
+        self.klah = String::from(RESOURCES[2]);
     }
 
-    pub fn take_kleh(&mut self) -> String {
-        let kleh = self.kleh.clone();
-        self.kleh = String::new();
-        kleh
+    pub fn take_klah(&mut self) -> String {
+        let klah = self.klah.clone();
+        self.klah = String::new();
+        klah
     }
 
     pub fn test_status(&self) -> String {
@@ -68,14 +76,14 @@ impl Depot {
         let mut result2 = "false";
         if self.seaplum != String::new() { result2 = "true"; }
         let mut result3 = "false";
-        if self.kleh != String::new() { result3 = "true"; }
+        if self.klah != String::new() { result3 = "true"; }
         String::new().to_owned() + "Burnstone obtained: " + result1 +
-        "\nSeaplum obtained: " + result2 + "\nKleh obtained: " + result3
+        "\nSeaplum obtained: " + result2 + "\nKlah obtained: " + result3
     }
 
     pub fn is_empty(&self) -> bool {
         self.burnstone == String::new() && self.seaplum == String::new() &&
-        self.kleh == String::new()
+        self.klah == String::new()
     }
 
 }

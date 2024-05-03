@@ -2,10 +2,17 @@
 //! # Version: May 3rd 2024
 //!
 //! ## Description
-//!
+//! Sets up structure for the dragon rider which holds references to
+//! - the type of resource that the dragonrider is carrying
+//! - the depot to obtain resources
+//! - the depot to store resources obtained by the dragonriders
+//! and has a signal that the depot has resources that are ready to be collected
+//! The dragon rider has the capability to wait and obtain resources, wait and consume resources,
+//! and group resources.
 //!
 //! ## Dependencies
-//!
+//! This module depends on the following external crate:
+//! - use std::sync::{Arc,Mutex,Condvar};
 //!
 //! ## Authors
 //! - Dylan Miller
@@ -63,7 +70,7 @@ impl DragonRider {
                 let _ = &depot.take_seaplum();
             },
             "Klah" => {
-                let _ = &depot.take_kleh();
+                let _ = &depot.take_klah();
             }
             _ => { unreachable!() }
         }
