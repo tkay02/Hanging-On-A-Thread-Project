@@ -87,69 +87,55 @@ fn main() {
     )));
 
     // Steward
-    let mut steward = Steward::new(
+    let steward = Steward::new(
         Arc::clone(&depot), Arc::clone(&steward_signal), Arc::clone(&burnstone_signal),
         Arc::clone(&seaplum_signal), Arc::clone(&klah_signal), Arc::clone(&log_arc)
     );
 
+    // List of strongholds
+    let mut strongholds:Vec<Stronghold> = Vec::new();
     // Burnstone Stronghold
     let burnstone_stronghold = Stronghold::new(
         "Burnstone".to_string(), Arc::clone(&steward_signal),
         Arc::clone(&burnstone_stronghold_signal), Arc::clone(&log_arc)
     );
+    strongholds.push(burnstone_stronghold);
     // Seaplum Stronghold
     let seaplum_stronghold = Stronghold::new(
         "Seaplum".to_string(), Arc::clone(&steward_signal),
         Arc::clone(&seaplum_stronghold_signal), Arc::clone(&log_arc)
     );
+    strongholds.push(seaplum_stronghold);
     // Klah Stronghold
     let klah_stronghold = Stronghold::new(
         "Klah".to_string(), Arc::clone(&steward_signal), Arc::clone(&klah_stronghold_signal),
         Arc::clone(&log_arc)
     );
+    strongholds.push(klah_stronghold);
 
+    // List of dragon riders
+    let mut dragonriders:Vec<DragonRider> = Vec::new();
     // Dragon Rider for Burnstone resource
-    let mut burnstone_dragon_rider = DragonRider::new(
+    let burnstone_dragon_rider = DragonRider::new(
         "Burnstone".to_string(), Arc::clone(&depot), Arc::clone(&dragon_depot),
         Arc::clone(&burnstone_signal), Arc::clone(&log_arc)
     );
+    dragonriders.push(burnstone_dragon_rider);
     // Dragon Rider for Seaplum resource
-    let mut seaplum_dragon_rider = DragonRider::new(
+    let seaplum_dragon_rider = DragonRider::new(
         "Seaplum".to_string(), Arc::clone(&depot), Arc::clone(&dragon_depot),
         Arc::clone(&seaplum_signal), Arc::clone(&log_arc)
     );
+    dragonriders.push(seaplum_dragon_rider);
     // Dragon Rider for Klah resource
-    let mut klah_dragon_rider = DragonRider::new(
+    let klah_dragon_rider = DragonRider::new(
         "Klah".to_string(), Arc::clone(&depot), Arc::clone(&dragon_depot),
         Arc::clone(&klah_signal), Arc::clone(&log_arc)
     );
+    dragonriders.push(klah_dragon_rider);
 
-    // Steward thread
-    thread::spawn(move || {
-        steward.go();
-    });
-
-    // Stronghold threads
-    thread::spawn(move || {
-        burnstone_stronghold.go();
-    });
-    thread::spawn(move || {
-        seaplum_stronghold.go();
-    });
-    thread::spawn(move || {
-        klah_stronghold.go();
-    });
-
-    // Dragon rider threads
-    thread::spawn(move || {
-        burnstone_dragon_rider.go();
-    });
-    thread::spawn(move || {
-        seaplum_dragon_rider.go();
-    });
-    thread::spawn(move || {
-        klah_dragon_rider.go();
-    });
+    // Spawn threads
+    spawn_threads(steward, strongholds, dragonriders);
 
     // Determines if process waits for a number amount of seconds or to run indefinitely
     if seconds > 0 {
@@ -211,4 +197,28 @@ fn get_logger(argument:&String) -> Logger {
         process::exit(1);
     }
     logger_result.unwrap()
+}
+
+/// Spawns threads to run steward, stronghold, and dragonrider cycle.
+/// 
+/// # Arguments
+/// * `steward`: The steward to run steward thread.
+/// * `strongholds`: List of strongholds, each spawning their own thread.
+/// * `dragonriders`: List of dragonriders, each spawning their own thread.
+fn spawn_threads(steward:Steward, strongholds:Vec<Stronghold>, dragonriders:Vec<DragonRider>) {
+    // Steward thread
+    let mut steward = steward;
+    thread::spawn(move || {
+        steward.go();
+    });
+    for stronghold in strongholds {
+        thread::spawn(move || {
+            stronghold.go();
+        });
+    }
+    for mut dragonrider in dragonriders {
+        thread::spawn(move || {
+            dragonrider.go();
+        });
+    }
 }
