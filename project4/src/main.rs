@@ -137,14 +137,8 @@ fn main() {
     // Spawn threads
     spawn_threads(steward, strongholds, dragonriders);
 
-    // Determines if process waits for a number amount of seconds or to run indefinitely
-    if seconds > 0 {
-        // Waits for inputted seconds before quiting
-        thread::sleep(Duration::from_secs(seconds as u64));
-    } else {
-        // Runs forever until user presses Ctrl C to kill process
-        thread::park();
-    }
+    // Runs main process for amount of time inputted by the user
+    run_main_thread(seconds);
 
 }
 
@@ -220,5 +214,20 @@ fn spawn_threads(steward:Steward, strongholds:Vec<Stronghold>, dragonriders:Vec<
         thread::spawn(move || {
             dragonrider.go();
         });
+    }
+}
+
+/// Determines if process waits for a number of seconds or to run indefinitely.
+/// 
+/// # Arguments
+/// * `seconds`: The number of seconds that the main process runs for. If seconds is less than or
+/// equal to 0, then process runs indefinitely until user kills process with Crtl C.
+fn run_main_thread(seconds: i64) {
+    if seconds > 0 {
+        // Waits for inputted seconds before quiting
+        thread::sleep(Duration::from_secs(seconds as u64));
+    } else {
+        // Runs forever until user presses Ctrl C to kill process
+        thread::park();
     }
 }

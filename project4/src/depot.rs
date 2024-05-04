@@ -85,28 +85,4 @@ impl Depot {
         klah
     }
 
-    /// Checks and reports the status of all resources within the depot.
-    ///
-    /// # Returns
-    /// A `String` detailing which resources are currently held in the depot.
-    pub fn test_status(&self) -> String {
-        let mut result1 = "false";
-        if self.burnstone != String::new() { result1 = "true"; }
-        let mut result2 = "false";
-        if self.seaplum != String::new() { result2 = "true"; }
-        let mut result3 = "false";
-        if self.klah != String::new() { result3 = "true"; }
-        String::new().to_owned() + "Burnstone obtained: " + result1 +
-        "\nSeaplum obtained: " + result2 + "\nKlah obtained: " + result3
-    }
-
-    /// Determines if the depot is completely empty.
-    ///
-    /// # Returns
-    /// `true` if all resources are depleted, otherwise `false`.
-    pub fn is_empty(&self) -> bool {
-        self.burnstone == String::new() && self.seaplum == String::new() &&
-        self.klah == String::new()
-    }
-
 }

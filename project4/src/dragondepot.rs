@@ -59,9 +59,9 @@ impl DragonDepot {
             collected_item1: String::new(),
             collected_item2: String::new(),
             item_count: 0,
-            burnstone_signal: burnstone_signal,
-            seaplum_signal: seaplum_signal,
-            klah_signal: klah_signal
+            burnstone_signal,
+            seaplum_signal,
+            klah_signal
         }
     }
 
